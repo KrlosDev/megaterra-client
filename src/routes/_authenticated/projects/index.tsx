@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { createFileRoute } from "@tanstack/react-router"
-import { PlusIcon } from "lucide-react"
+import { Building2Icon, PlusIcon } from "lucide-react"
 import { toast } from "sonner"
 import {
   appointmentsService,
@@ -20,6 +20,12 @@ import {
   type ProjectStats,
 } from "@/components/projects/project-card"
 import { Button } from "@/components/ui/button"
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const Route = createFileRoute("/_authenticated/projects/")({
@@ -125,7 +131,14 @@ function RouteComponent() {
           ))}
         </div>
       ) : projects.length === 0 ? (
-        <p className="text-center text-muted-foreground">No projects yet.</p>
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Building2Icon />
+            </EmptyMedia>
+            <EmptyTitle>No projects yet.</EmptyTitle>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {projects.map((project) => (

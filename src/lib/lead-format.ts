@@ -88,7 +88,8 @@ export function formatBudget(
     }
   }
   if (min != null && max != null) return `${fmt(Number(min))} – ${fmt(Number(max))}`
-  return fmt(Number(min ?? max))
+  if (min != null) return `${fmt(Number(min))}+`
+  return fmt(Number(max))
 }
 
 /** Compact budget range for tight spaces (e.g. `$80K–$120K`). Falls back to
@@ -116,5 +117,6 @@ export function formatBudgetCompact(
     }
   }
   if (min != null && max != null) return `${fmt(Number(min))}–${fmt(Number(max))}`
-  return fmt(Number(min ?? max))
+  if (min != null) return `${fmt(Number(min))}+`
+  return fmt(Number(max))
 }

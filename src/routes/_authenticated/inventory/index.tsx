@@ -81,10 +81,7 @@ function createInventoryColumns(
       header: t("inventory.unit"),
       accessor: (unit) => unit.unit,
       enableFilter: true,
-      cell: (unit) => {
-        const size = sizeOf(unit)
-        return size !== "—" ? `${unit.unit} — ${size}` : unit.unit
-      },
+      cell: (unit) => unit.unit,
     },
     {
       id: "size",
@@ -124,7 +121,7 @@ function createInventoryColumns(
         unit.status === "available" ? (
           <div className="flex justify-end gap-2">
             <Button
-              size="sm"
+              size="icon"
               variant="outline"
               onClick={() => onQuote(unit)}
               aria-label={t("inventory.quote")}

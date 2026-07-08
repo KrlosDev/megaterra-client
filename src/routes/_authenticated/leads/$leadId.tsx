@@ -56,6 +56,12 @@ export const Route = createFileRoute("/_authenticated/leads/$leadId")({
   component: RouteComponent,
 })
 
+function fmtDate(value: string | null): string {
+  return value
+    ? format(new Date(value), "MMM d, yyyy", { locale: dateLocale() })
+    : "—"
+}
+
 function RouteComponent() {
   const { t } = useTranslation()
   const { leadId } = Route.useParams()
@@ -149,8 +155,8 @@ function RouteComponent() {
 
       {/* Header card */}
       <div className="rounded-2xl border bg-card p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
+        <div className="flex flex-wrap items-start justify-between gap-6">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold">{lead.lead_name}</h1>
               {lead.temperature && (
@@ -165,13 +171,17 @@ function RouteComponent() {
                 {lead.lead_phone}
               </div>
             )}
-            <div className="mt-4 flex flex-wrap gap-x-8 gap-y-2 text-sm">
+            <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 xl:grid-cols-4">
               <Meta
                 label={t("leads.project")}
                 value={lead.project?.project_name ?? null}
               />
               <Meta label={t("leads.advisor")} value={advisor} />
+              <Meta label={t("leads.email")} value={lead.lead_email} />
               <Meta label={t("leads.source")} value={lead.lead_source} />
+              <Meta label={t("leads.adName")} value={lead.ad_name} />
+              <Meta label={t("leads.formName")} value={lead.form_name} />
+              <Meta label={t("leads.interest")} value={lead.target_interest} />
               <Meta
                 label={t("leads.budget")}
                 value={formatBudget(
@@ -180,10 +190,15 @@ function RouteComponent() {
                   lead.project?.currency ?? null
                 )}
               />
+              <Meta label={t("leads.createdCol")} value={fmtDate(lead.created_date)} />
+              <Meta
+                label={t("leads.lastContacted")}
+                value={fmtDate(lead.last_contacted)}
+              />
             </div>
           </div>
 
-          <div className="flex flex-col items-end gap-3">
+          <div className="flex shrink-0 flex-col items-end gap-3">
             <LeadSheet
               lead={lead}
               onSaved={setLead}
@@ -372,10 +387,12 @@ function BackLink() {
 
 function Meta({ label, value }: { label: string; value: string | null }) {
   return (
-    <span className="inline-flex items-baseline gap-1.5">
-      <span className="text-muted-foreground">{label}:</span>
-      <span className="font-medium">{value || "—"}</span>
-    </span>
+    <div className="flex min-w-0 flex-col gap-0.5">
+      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </span>
+      <span className="truncate text-sm font-medium">{value || "—"}</span>
+    </div>
   )
 }
 

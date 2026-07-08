@@ -88,6 +88,8 @@ export const spanish: typeof english = {
     email: "Correo",
     phone: "Teléfono",
     source: "Fuente",
+    adName: "Nombre del anuncio",
+    formName: "Nombre del formulario",
     interest: "Interés",
     budget: "Presupuesto",
     budgetMin: "Presupuesto mín.",

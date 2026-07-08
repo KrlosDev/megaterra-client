@@ -11,9 +11,12 @@ import {
 export type LeadGroupFilter = "all" | LeadStageGroup
 
 /** Default visible columns: Name, Email, Source, Budget, Stage, Project,
- * Advisor. The rest start hidden and can be toggled on via the Columns panel. */
+ * Advisor. The rest (phone, ad name, form name, interest, temperature, created,
+ * last contacted) start hidden and can be toggled on via the Columns panel. */
 export const LEADS_DEFAULT_COLUMN_VISIBILITY = {
   phone: false,
+  ad_name: false,
+  form_name: false,
   interest: false,
   temperature: false,
   created: false,

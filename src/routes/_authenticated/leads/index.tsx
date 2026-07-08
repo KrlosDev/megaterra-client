@@ -62,6 +62,8 @@ function createLeadColumns(t: TFunction): DataTableColumn<Lead>[] {
       enableFilter: false,
     },
     { id: "source", header: t("leads.source"), accessor: (lead) => lead.lead_source },
+    { id: "ad_name", header: t("leads.adName"), accessor: (lead) => lead.ad_name },
+    { id: "form_name", header: t("leads.formName"), accessor: (lead) => lead.form_name },
     {
       id: "interest",
       header: t("leads.interest"),

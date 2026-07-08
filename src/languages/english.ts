@@ -90,6 +90,8 @@ export const english = {
     email: "Email",
     phone: "Phone",
     source: "Source",
+    adName: "Ad name",
+    formName: "Form name",
     interest: "Interest",
     budget: "Budget",
     budgetMin: "Budget min",

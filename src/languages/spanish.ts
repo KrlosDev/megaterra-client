@@ -52,6 +52,40 @@ export const spanish: typeof english = {
     account: "Cuenta",
   },
 
+  dashboard: {
+    welcome: "Bienvenido de nuevo",
+    welcomeNamed: "Bienvenido de nuevo, {{name}}",
+    subtitle: "Esto es lo que necesita tu atención hoy.",
+    // KPI cards
+    newLeadsWeek: "Leads nuevos esta semana",
+    hotLeads: "Leads calientes",
+    upcomingVisits: "Próximas visitas",
+    quotesSentMonth: "Cotizaciones enviadas este mes",
+    unitsAvailable: "Unidades disponibles",
+    underContract: "En contrato",
+    // Pipeline snapshot
+    pipelineTitle: "Pipeline",
+    pipelineEmpty: "Aún no hay leads.",
+    // Attention lists
+    upcomingTitle: "Próximas visitas",
+    upcomingEmpty: "No hay visitas próximas.",
+    followUpTitle: "Requieren seguimiento",
+    followUpEmpty: "Ningún lead requiere seguimiento.",
+    hotWaitingTitle: "Leads calientes sin visita",
+    hotWaitingEmpty: "No hay leads calientes en espera.",
+    viewAll: "Ver todos",
+    neverContacted: "Sin contactar",
+    // Attribution chart
+    attributionTitle: "Atribución de leads",
+    bySource: "Fuente",
+    byAdName: "Anuncio",
+    byFormName: "Formulario",
+    attributionEmpty: "Aún no hay leads para desglosar.",
+    unknown: "Desconocido",
+    otherBucket: "Otros",
+    loadFailed: "No se pudo cargar el dashboard",
+  },
+
   account: {
     account: "Cuenta",
     notifications: "Notificaciones",

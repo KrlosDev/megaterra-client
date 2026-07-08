@@ -53,6 +53,40 @@ export const english = {
     account: "Account",
   },
 
+  dashboard: {
+    welcome: "Welcome back",
+    welcomeNamed: "Welcome back, {{name}}",
+    subtitle: "Here's what needs your attention today.",
+    // KPI cards
+    newLeadsWeek: "New leads this week",
+    hotLeads: "Hot leads",
+    upcomingVisits: "Upcoming visits",
+    quotesSentMonth: "Quotes sent this month",
+    unitsAvailable: "Units available",
+    underContract: "Under contract",
+    // Pipeline snapshot
+    pipelineTitle: "Pipeline",
+    pipelineEmpty: "No leads yet.",
+    // Attention lists
+    upcomingTitle: "Upcoming visits",
+    upcomingEmpty: "No upcoming visits.",
+    followUpTitle: "Needs follow-up",
+    followUpEmpty: "No leads need follow-up.",
+    hotWaitingTitle: "Hot leads without a visit",
+    hotWaitingEmpty: "No hot leads waiting.",
+    viewAll: "View all",
+    neverContacted: "Never contacted",
+    // Attribution chart
+    attributionTitle: "Lead attribution",
+    bySource: "Source",
+    byAdName: "Ad name",
+    byFormName: "Form name",
+    attributionEmpty: "No leads to break down yet.",
+    unknown: "Unknown",
+    otherBucket: "Other",
+    loadFailed: "Failed to load dashboard",
+  },
+
   account: {
     account: "Account",
     notifications: "Notifications",

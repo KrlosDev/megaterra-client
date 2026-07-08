@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import {
   authService,
@@ -12,7 +13,6 @@ import {
   type Project,
 } from "@/services"
 import {
-  LEAD_STAGE_LABELS,
   LEAD_STAGE_ORDER,
   LEAD_TEMPERATURE_LABELS,
 } from "@/lib/lead-format"
@@ -118,6 +118,7 @@ function LeadForm({
   onSaved: (lead: Lead) => void
 }) {
   const isEdit = Boolean(lead)
+  const { t } = useTranslation()
   const profile = useAuthStore((state) => state.profile)
   const isAdmin = profile?.role === "admin"
 
@@ -135,7 +136,7 @@ function LeadForm({
       .then(setProjects)
       .catch((error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to load projects"
+          error instanceof Error ? error.message : t("leads.loadProjectsFailed")
         )
       })
     if (isAdmin) {
@@ -144,7 +145,7 @@ function LeadForm({
         .then(setAdvisors)
         .catch((error) => {
           toast.error(
-            error instanceof Error ? error.message : "Failed to load advisors"
+            error instanceof Error ? error.message : t("leads.loadAdvisorsFailed")
           )
         })
     }
@@ -157,7 +158,7 @@ function LeadForm({
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!form.lead_name.trim()) {
-      toast.error("Name is required")
+      toast.error(t("leads.nameRequired"))
       return
     }
     setSaving(true)
@@ -182,13 +183,15 @@ function LeadForm({
         isEdit && lead
           ? await leadsService.update(lead.id, payload)
           : await leadsService.create(payload)
-      toast.success(isEdit ? "Lead updated" : "Lead created")
+      toast.success(isEdit ? t("leads.updated") : t("leads.created"))
       onSaved(saved)
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : `Failed to ${isEdit ? "update" : "create"} lead`
+          : isEdit
+            ? t("leads.updateFailed")
+            : t("leads.createFailed")
       )
     } finally {
       setSaving(false)
@@ -198,9 +201,11 @@ function LeadForm({
   return (
     <>
       <SheetHeader>
-        <SheetTitle>{isEdit ? "Edit lead" : "New lead"}</SheetTitle>
+        <SheetTitle>{isEdit ? t("leads.editLead") : t("leads.newLead")}</SheetTitle>
         <SheetDescription>
-          {isEdit ? "Update this lead's details." : "Add a lead to the pipeline."}
+          {isEdit
+            ? t("leads.editLeadDescription")
+            : t("leads.newLeadDescription")}
         </SheetDescription>
       </SheetHeader>
 
@@ -209,7 +214,7 @@ function LeadForm({
         className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 pb-6"
       >
         <Field>
-          <FieldLabel htmlFor="lead_name">Name *</FieldLabel>
+          <FieldLabel htmlFor="lead_name">{t("leads.name")} *</FieldLabel>
           <Input
             id="lead_name"
             value={form.lead_name}
@@ -220,7 +225,7 @@ function LeadForm({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="lead_email">Email</FieldLabel>
+          <FieldLabel htmlFor="lead_email">{t("leads.email")}</FieldLabel>
           <Input
             id="lead_email"
             type="email"
@@ -231,7 +236,7 @@ function LeadForm({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="lead_phone">Phone</FieldLabel>
+          <FieldLabel htmlFor="lead_phone">{t("leads.phone")}</FieldLabel>
           <Input
             id="lead_phone"
             value={form.lead_phone}
@@ -241,23 +246,23 @@ function LeadForm({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="lead_source">Source</FieldLabel>
+          <FieldLabel htmlFor="lead_source">{t("leads.source")}</FieldLabel>
           <Input
             id="lead_source"
             value={form.lead_source}
             onChange={(event) => set("lead_source", event.target.value)}
-            placeholder="Referral, Facebook…"
+            placeholder={t("leads.phSource")}
           />
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="project_id">Project</FieldLabel>
+          <FieldLabel htmlFor="project_id">{t("leads.project")}</FieldLabel>
           <Select
             value={form.project_id || undefined}
             onValueChange={(value) => set("project_id", value)}
           >
             <SelectTrigger id="project_id" className="w-full">
-              <SelectValue placeholder="Select project" />
+              <SelectValue placeholder={t("leads.selectProject")} />
             </SelectTrigger>
             <SelectContent position="popper" className="max-h-60">
               {projects.map((project) => (
@@ -270,18 +275,18 @@ function LeadForm({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="target_interest">Interest</FieldLabel>
+          <FieldLabel htmlFor="target_interest">{t("leads.interest")}</FieldLabel>
           <Input
             id="target_interest"
             value={form.target_interest}
             onChange={(event) => set("target_interest", event.target.value)}
-            placeholder="2-bedroom apartment"
+            placeholder={t("leads.phInterest")}
           />
         </Field>
 
         <div className="grid grid-cols-2 gap-4">
           <Field>
-            <FieldLabel htmlFor="budget_min">Budget min</FieldLabel>
+            <FieldLabel htmlFor="budget_min">{t("leads.budgetMin")}</FieldLabel>
             <Input
               id="budget_min"
               type="number"
@@ -293,7 +298,7 @@ function LeadForm({
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="budget_max">Budget max</FieldLabel>
+            <FieldLabel htmlFor="budget_max">{t("leads.budgetMax")}</FieldLabel>
             <Input
               id="budget_max"
               type="number"
@@ -307,18 +312,18 @@ function LeadForm({
         </div>
 
         <Field>
-          <FieldLabel htmlFor="temperature">Temperature</FieldLabel>
+          <FieldLabel htmlFor="temperature">{t("leads.temperature")}</FieldLabel>
           <Select
             value={form.temperature || undefined}
             onValueChange={(value) => set("temperature", value as LeadTemperature)}
           >
             <SelectTrigger id="temperature" className="w-full">
-              <SelectValue placeholder="Select temperature" />
+              <SelectValue placeholder={t("leads.selectTemperature")} />
             </SelectTrigger>
             <SelectContent>
               {TEMPERATURE_OPTIONS.map((temp) => (
                 <SelectItem key={temp} value={temp}>
-                  {LEAD_TEMPERATURE_LABELS[temp]}
+                  {t(`leads.temperatures.${temp}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -326,7 +331,7 @@ function LeadForm({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="lead_stage">Stage</FieldLabel>
+          <FieldLabel htmlFor="lead_stage">{t("leads.stage")}</FieldLabel>
           <Select
             value={form.lead_stage}
             onValueChange={(value) => set("lead_stage", value as LeadStage)}
@@ -337,7 +342,7 @@ function LeadForm({
             <SelectContent position="popper" className="max-h-60">
               {LEAD_STAGE_ORDER.map((stage) => (
                 <SelectItem key={stage} value={stage}>
-                  {LEAD_STAGE_LABELS[stage]}
+                  {t(`leads.stages.${stage}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -346,14 +351,14 @@ function LeadForm({
 
         {/* Admins can assign any advisor; everyone else is fixed to self. */}
         <Field>
-          <FieldLabel htmlFor="advisor_id">Advisor</FieldLabel>
+          <FieldLabel htmlFor="advisor_id">{t("leads.advisor")}</FieldLabel>
           {isAdmin ? (
             <Select
               value={form.advisor_id || undefined}
               onValueChange={(value) => set("advisor_id", value)}
             >
               <SelectTrigger id="advisor_id" className="w-full">
-                <SelectValue placeholder="Select advisor" />
+                <SelectValue placeholder={t("leads.selectAdvisor")} />
               </SelectTrigger>
               <SelectContent position="popper" className="max-h-60">
                 {advisors.map((advisor) => (
@@ -377,11 +382,11 @@ function LeadForm({
           <Button type="submit" disabled={saving}>
             {saving
               ? isEdit
-                ? "Saving..."
-                : "Creating..."
+                ? t("common.saving")
+                : t("common.creating")
               : isEdit
-                ? "Save changes"
-                : "Create lead"}
+                ? t("common.saveChanges")
+                : t("leads.createLead")}
           </Button>
         </SheetFooter>
       </form>

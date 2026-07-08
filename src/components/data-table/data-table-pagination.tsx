@@ -5,6 +5,7 @@ import {
   ChevronsLeftIcon,
   ChevronsRightIcon,
 } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -25,6 +26,7 @@ export function DataTablePagination<TData>({
   /** Total row count for server-side (manual) pagination. */
   rowCount?: number
 }) {
+  const { t } = useTranslation()
   const { pageIndex, pageSize } = table.getState().pagination
   const total = rowCount ?? table.getFilteredRowModel().rows.length
   const pageCount = Math.max(1, table.getPageCount())
@@ -34,7 +36,7 @@ export function DataTablePagination<TData>({
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-t px-2 py-2 text-xs">
       <div className="flex items-center gap-2">
-        <span className="text-muted-foreground">Page Size:</span>
+        <span className="text-muted-foreground">{t("common.pageSize")}</span>
         <Select
           value={String(pageSize)}
           onValueChange={(value) => table.setPageSize(Number(value))}
@@ -53,14 +55,14 @@ export function DataTablePagination<TData>({
       </div>
 
       <div className="text-muted-foreground">
-        {start} to {end} of {total}
+        {t("common.rowsRange", { from: start, to: end, total })}
       </div>
 
       <div className="flex items-center gap-1">
         <Button
           variant="ghost"
           size="icon-sm"
-          aria-label="First page"
+          aria-label={t("common.firstPage")}
           onClick={() => table.setPageIndex(0)}
           disabled={!table.getCanPreviousPage()}
         >
@@ -69,19 +71,19 @@ export function DataTablePagination<TData>({
         <Button
           variant="ghost"
           size="icon-sm"
-          aria-label="Previous page"
+          aria-label={t("common.previousPage")}
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
           <ChevronLeftIcon />
         </Button>
         <span className="px-1 whitespace-nowrap">
-          Page {pageIndex + 1} of {pageCount}
+          {t("common.pageOf", { page: pageIndex + 1, pages: pageCount })}
         </span>
         <Button
           variant="ghost"
           size="icon-sm"
-          aria-label="Next page"
+          aria-label={t("common.nextPage")}
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
@@ -90,7 +92,7 @@ export function DataTablePagination<TData>({
         <Button
           variant="ghost"
           size="icon-sm"
-          aria-label="Last page"
+          aria-label={t("common.lastPage")}
           onClick={() => table.setPageIndex(pageCount - 1)}
           disabled={!table.getCanNextPage()}
         >

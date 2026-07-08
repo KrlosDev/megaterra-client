@@ -1,4 +1,5 @@
 import type { LeadStage, LeadTemperature } from "@/services"
+import { activeLocale } from "./locale"
 
 /** Human-readable labels for the lead_stage enum values. */
 export const LEAD_STAGE_LABELS: Record<LeadStage, string> = {
@@ -74,15 +75,16 @@ export function formatBudget(
   currency: string | null
 ): string {
   if (min == null && max == null) return "—"
+  const locale = activeLocale()
   const fmt = (amount: number) => {
     try {
-      return new Intl.NumberFormat("en-US", {
+      return new Intl.NumberFormat(locale, {
         style: "currency",
         currency: currency || "USD",
         maximumFractionDigits: 0,
       }).format(amount)
     } catch {
-      return `${amount.toLocaleString("en-US")}${currency ? ` ${currency}` : ""}`
+      return `${amount.toLocaleString(locale)}${currency ? ` ${currency}` : ""}`
     }
   }
   if (min != null && max != null) return `${fmt(Number(min))} – ${fmt(Number(max))}`
@@ -97,16 +99,17 @@ export function formatBudgetCompact(
   currency: string | null
 ): string {
   if (min == null && max == null) return "—"
+  const locale = activeLocale()
   const fmt = (amount: number) => {
     try {
-      return new Intl.NumberFormat("en-US", {
+      return new Intl.NumberFormat(locale, {
         style: "currency",
         currency: currency || "USD",
         notation: "compact",
         maximumFractionDigits: 0,
       }).format(amount)
     } catch {
-      return `${new Intl.NumberFormat("en-US", {
+      return `${new Intl.NumberFormat(locale, {
         notation: "compact",
         maximumFractionDigits: 0,
       }).format(amount)}${currency ? ` ${currency}` : ""}`

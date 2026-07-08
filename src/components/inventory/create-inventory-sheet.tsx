@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { PlusIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import {
   inventoryService,
@@ -55,6 +56,7 @@ export function CreateInventorySheet({
 }: {
   onCreated: (unit: InventoryUnit) => void
 }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState(EMPTY)
   const [saving, setSaving] = useState(false)
@@ -68,10 +70,10 @@ export function CreateInventorySheet({
       .then(setProjects)
       .catch((error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to load projects"
+          error instanceof Error ? error.message : t("leads.loadProjectsFailed")
         )
       })
-  }, [open, projects.length])
+  }, [open, projects.length, t])
 
   function set<K extends keyof typeof EMPTY>(key: K, value: (typeof EMPTY)[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -86,7 +88,7 @@ export function CreateInventorySheet({
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!form.project_id || !form.unit.trim() || !form.status) {
-      toast.error("Project, unit and status are required")
+      toast.error(t("inventory.requiredFields"))
       return
     }
     setSaving(true)
@@ -102,13 +104,13 @@ export function CreateInventorySheet({
     }
     try {
       const unit = await inventoryService.create(payload)
-      toast.success("Unit created")
+      toast.success(t("inventory.unitCreated"))
       onCreated(unit)
       setForm(EMPTY)
       setOpen(false)
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to create unit"
+        error instanceof Error ? error.message : t("inventory.createFailed")
       )
     } finally {
       setSaving(false)
@@ -120,14 +122,14 @@ export function CreateInventorySheet({
       <SheetTrigger asChild>
         <Button size="sm">
           <PlusIcon />
-          New unit
+          {t("inventory.newUnit")}
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-full sm:max-w-xl">
         <SheetHeader>
-          <SheetTitle>New unit</SheetTitle>
+          <SheetTitle>{t("inventory.newUnit")}</SheetTitle>
           <SheetDescription>
-            Add a single inventory unit to a project.
+            {t("inventory.newUnitDescription")}
           </SheetDescription>
         </SheetHeader>
 
@@ -136,13 +138,13 @@ export function CreateInventorySheet({
           className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 pb-6"
         >
           <Field>
-            <FieldLabel htmlFor="project_id">Project *</FieldLabel>
+            <FieldLabel htmlFor="project_id">{t("inventory.project")} *</FieldLabel>
             <Select
               value={form.project_id || undefined}
               onValueChange={(value) => set("project_id", value)}
             >
               <SelectTrigger id="project_id" className="w-full">
-                <SelectValue placeholder="Select project" />
+                <SelectValue placeholder={t("leads.selectProject")} />
               </SelectTrigger>
               <SelectContent position="popper" className="max-h-60">
                 {projects.map((project) => (
@@ -155,7 +157,7 @@ export function CreateInventorySheet({
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="unit">Unit *</FieldLabel>
+            <FieldLabel htmlFor="unit">{t("inventory.unit")} *</FieldLabel>
             <Input
               id="unit"
               value={form.unit}
@@ -166,18 +168,18 @@ export function CreateInventorySheet({
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="unit_type">Type</FieldLabel>
+            <FieldLabel htmlFor="unit_type">{t("inventory.type")}</FieldLabel>
             <Select
               value={form.unit_type || undefined}
               onValueChange={(value) => set("unit_type", value as UnitType)}
             >
               <SelectTrigger id="unit_type" className="w-full">
-                <SelectValue placeholder="Select type" />
+                <SelectValue placeholder={t("inventory.selectType")} />
               </SelectTrigger>
               <SelectContent>
                 {UNIT_TYPE_OPTIONS.map((type) => (
                   <SelectItem key={type} value={type}>
-                    {UNIT_TYPE_LABELS[type]}
+                    {t(`inventory.unitTypes.${type}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -185,18 +187,18 @@ export function CreateInventorySheet({
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="unit_floor">Floor</FieldLabel>
+            <FieldLabel htmlFor="unit_floor">{t("inventory.floor")}</FieldLabel>
             <Input
               id="unit_floor"
               value={form.unit_floor}
               onChange={(event) => set("unit_floor", event.target.value)}
-              placeholder="e.g. 3 or E1"
+              placeholder={t("inventory.phFloor")}
             />
           </Field>
 
           <Field>
             <FieldLabel htmlFor="unit_size">
-              Size{sizeUnit ? ` (${sizeUnit})` : ""}
+              {t("inventory.size")}{sizeUnit ? ` (${sizeUnit})` : ""}
             </FieldLabel>
             <Input
               id="unit_size"
@@ -211,7 +213,7 @@ export function CreateInventorySheet({
 
           <Field>
             <FieldLabel htmlFor="price">
-              Price{selectedProject?.currency ? ` (${selectedProject.currency})` : ""}
+              {t("inventory.price")}{selectedProject?.currency ? ` (${selectedProject.currency})` : ""}
             </FieldLabel>
             <Input
               id="price"
@@ -225,18 +227,18 @@ export function CreateInventorySheet({
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="status">Status *</FieldLabel>
+            <FieldLabel htmlFor="status">{t("common.status")} *</FieldLabel>
             <Select
               value={form.status || undefined}
               onValueChange={(value) => set("status", value as InventoryStatus)}
             >
               <SelectTrigger id="status" className="w-full">
-                <SelectValue placeholder="Select status" />
+                <SelectValue placeholder={t("inventory.selectStatus")} />
               </SelectTrigger>
               <SelectContent>
                 {STATUS_OPTIONS.map((status) => (
                   <SelectItem key={status} value={status}>
-                    {INVENTORY_STATUS_LABELS[status]}
+                    {t(`inventory.statuses.${status}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -244,18 +246,20 @@ export function CreateInventorySheet({
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="unit_description">Description</FieldLabel>
+            <FieldLabel htmlFor="unit_description">
+              {t("inventory.description")}
+            </FieldLabel>
             <Textarea
               id="unit_description"
               value={form.unit_description}
               onChange={(event) => set("unit_description", event.target.value)}
-              placeholder="Corner unit with balcony"
+              placeholder={t("inventory.phDescription")}
             />
           </Field>
 
           <SheetFooter className="mt-auto px-0">
             <Button type="submit" disabled={saving}>
-              {saving ? "Creating..." : "Create unit"}
+              {saving ? t("common.creating") : t("inventory.createUnit")}
             </Button>
           </SheetFooter>
         </form>

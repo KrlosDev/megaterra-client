@@ -23,6 +23,7 @@ import {
 import { useSidebarStore } from "@/stores/sidebar-store"
 import { ChevronRightIcon } from "lucide-react"
 import {Link} from '@tanstack/react-router'
+import { useTranslation } from "react-i18next"
 
 type NavItem = {
   title: string
@@ -55,6 +56,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
 }
 
 function ExpandedNavItem({ item }: { item: NavItem }) {
+  const { t } = useTranslation()
   const openItems = useSidebarStore((state) => state.openItems)
   const setItemOpen = useSidebarStore((state) => state.setItemOpen)
   const isOpen = openItems[item.title] ?? item.isActive ?? false
@@ -68,9 +70,9 @@ function ExpandedNavItem({ item }: { item: NavItem }) {
     >
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton tooltip={item.title}>
+          <SidebarMenuButton tooltip={t(item.title)}>
             {item.icon}
-            <span>{item.title}</span>
+            <span>{t(item.title)}</span>
             <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
@@ -82,7 +84,7 @@ function ExpandedNavItem({ item }: { item: NavItem }) {
                   <SidebarMenuSubItem key={subItem.title}>
                     <SidebarMenuSubButton asChild>
                       <Link to={subItem.url}>
-                        <span>{subItem.title}</span>
+                        <span>{t(subItem.title)}</span>
                       </Link>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -97,13 +99,14 @@ function ExpandedNavItem({ item }: { item: NavItem }) {
 }
 
 function CollapsedNavItem({ item }: { item: NavItem }) {
+  const { t } = useTranslation()
   return (
     <SidebarMenuItem>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <SidebarMenuButton tooltip={item.title}>
+          <SidebarMenuButton tooltip={t(item.title)}>
             {item.icon}
-            <span>{item.title}</span>
+            <span>{t(item.title)}</span>
           </SidebarMenuButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -111,11 +114,11 @@ function CollapsedNavItem({ item }: { item: NavItem }) {
           align="start"
           className="min-w-48 rounded-lg"
         >
-          <DropdownMenuLabel>{item.title}</DropdownMenuLabel>
+          <DropdownMenuLabel>{t(item.title)}</DropdownMenuLabel>
           {item.items?.map((subItem) => (
             <DropdownMenuItem key={subItem.title} asChild>
               <Link to={subItem.url}>
-                <span>{subItem.title}</span>
+                <span>{t(subItem.title)}</span>
               </Link>
             </DropdownMenuItem>
           ))}

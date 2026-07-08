@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { format, formatDistanceToNow } from "date-fns"
+import { useTranslation } from "react-i18next"
 import {
   ArrowLeftIcon,
   CalculatorIcon,
@@ -24,14 +25,12 @@ import {
   type Quote,
 } from "@/services"
 import {
-  LEAD_STAGE_LABELS,
   LEAD_STAGE_ORDER,
-  LEAD_TEMPERATURE_LABELS,
   LEAD_TEMPERATURE_VARIANTS,
   formatBudget,
 } from "@/lib/lead-format"
 import { formatPrice } from "@/lib/inventory-format"
-import { APPOINTMENT_TYPE_LABELS } from "@/lib/appointment-format"
+import { dateLocale } from "@/lib/locale"
 import { usePageTitleStore } from "@/stores/page-title-store"
 import { LeadSheet } from "@/components/leads/lead-sheet"
 import { AppointmentStatusBadge } from "@/components/appointments/appointment-status-badge"
@@ -58,6 +57,7 @@ export const Route = createFileRoute("/_authenticated/leads/$leadId")({
 })
 
 function RouteComponent() {
+  const { t } = useTranslation()
   const { leadId } = Route.useParams()
   const [lead, setLead] = useState<Lead | null>(null)
   const [notes, setNotes] = useState<LeadNote[]>([])
@@ -86,7 +86,7 @@ function RouteComponent() {
       })
       .catch((error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to load lead"
+          error instanceof Error ? error.message : t("leads.loadOneFailed")
         )
       })
       .finally(() => {
@@ -114,7 +114,7 @@ function RouteComponent() {
         current ? { ...current, lead_stage: previous } : current
       )
       toast.error(
-        error instanceof Error ? error.message : "Failed to update stage"
+        error instanceof Error ? error.message : t("leads.stageUpdateFailed")
       )
     })
   }
@@ -136,7 +136,7 @@ function RouteComponent() {
     return (
       <div className="flex flex-col gap-4">
         <BackLink />
-        <EmptyState icon={<UserXIcon />} title="Lead not found." />
+        <EmptyState icon={<UserXIcon />} title={t("leads.notFound")} />
       </div>
     )
   }
@@ -155,7 +155,7 @@ function RouteComponent() {
               <h1 className="text-2xl font-bold">{lead.lead_name}</h1>
               {lead.temperature && (
                 <Badge variant={LEAD_TEMPERATURE_VARIANTS[lead.temperature]}>
-                  {LEAD_TEMPERATURE_LABELS[lead.temperature]}
+                  {t(`leads.temperatures.${lead.temperature}`)}
                 </Badge>
               )}
             </div>
@@ -166,11 +166,14 @@ function RouteComponent() {
               </div>
             )}
             <div className="mt-4 flex flex-wrap gap-x-8 gap-y-2 text-sm">
-              <Meta label="Project" value={lead.project?.project_name ?? null} />
-              <Meta label="Advisor" value={advisor} />
-              <Meta label="Source" value={lead.lead_source} />
               <Meta
-                label="Budget"
+                label={t("leads.project")}
+                value={lead.project?.project_name ?? null}
+              />
+              <Meta label={t("leads.advisor")} value={advisor} />
+              <Meta label={t("leads.source")} value={lead.lead_source} />
+              <Meta
+                label={t("leads.budget")}
                 value={formatBudget(
                   lead.budget_min,
                   lead.budget_max,
@@ -187,13 +190,13 @@ function RouteComponent() {
               trigger={
                 <Button variant="outline" size="sm">
                   <PencilIcon />
-                  Edit
+                  {t("common.edit")}
                 </Button>
               }
             />
             <div className="flex flex-col items-end gap-1">
               <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Stage
+                {t("leads.stage")}
               </span>
               <Select value={lead.lead_stage} onValueChange={handleStageChange}>
                 <SelectTrigger className="w-56">
@@ -202,7 +205,7 @@ function RouteComponent() {
                 <SelectContent position="popper" className="max-h-60">
                   {LEAD_STAGE_ORDER.map((stage) => (
                     <SelectItem key={stage} value={stage}>
-                      {LEAD_STAGE_LABELS[stage]}
+                      {t(`leads.stages.${stage}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -219,12 +222,12 @@ function RouteComponent() {
         <div className="rounded-xl border bg-card">
           <h2 className="flex items-center gap-2 p-5 pb-2 text-lg font-semibold">
             <CalendarIcon className="size-5 text-primary" />
-            Appointments
+            {t("appointments.title")}
           </h2>
           {appointments.length === 0 ? (
             <EmptyState
               icon={<CalendarIcon />}
-              title="No appointments for this lead."
+              title={t("appointments.empty")}
             />
           ) : (
             <ul>
@@ -236,11 +239,10 @@ function RouteComponent() {
                   <div className="flex items-center gap-3">
                     <ClockIcon className="size-4 text-muted-foreground" />
                     <span className="text-sm">
-                      {format(
-                        new Date(appointment.scheduled_at),
-                        "MMM d · HH:mm"
-                      )}{" "}
-                      · {APPOINTMENT_TYPE_LABELS[appointment.appointment_type]}
+                      {format(new Date(appointment.scheduled_at), "MMM d · HH:mm", {
+                        locale: dateLocale(),
+                      })}{" "}
+                      · {t(`appointments.types.${appointment.appointment_type}`)}
                     </span>
                   </div>
                   <AppointmentStatusBadge status={appointment.status} />
@@ -253,11 +255,11 @@ function RouteComponent() {
 
       {/* Quotes */}
       <div className="rounded-xl border bg-card">
-        <h2 className="p-5 pb-2 text-lg font-semibold">Quotes</h2>
+        <h2 className="p-5 pb-2 text-lg font-semibold">{t("quotes.title")}</h2>
         {quotes.length === 0 ? (
           <EmptyState
             icon={<CalculatorIcon />}
-            title="No quotes for this lead."
+            title={t("quotes.emptyForLead")}
           />
         ) : (
           <ul>
@@ -272,11 +274,13 @@ function RouteComponent() {
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {formatPrice(quote.total, quote.currency)} total ·{" "}
-                    {format(new Date(quote.created_at), "MMM d, yyyy")}
+                    {format(new Date(quote.created_at), "MMM d, yyyy", {
+                      locale: dateLocale(),
+                    })}
                   </div>
                 </div>
                 <Badge variant={quote.sent ? "default" : "outline"}>
-                  {quote.sent ? "Sent" : "Not sent"}
+                  {quote.sent ? t("quotes.sent") : t("quotes.notSent")}
                 </Badge>
               </li>
             ))}
@@ -296,6 +300,7 @@ function NotesCard({
   notes: LeadNote[]
   onNotesChange: (updater: (prev: LeadNote[]) => LeadNote[]) => void
 }) {
+  const { t } = useTranslation()
   const [draft, setDraft] = useState("")
   const [saving, setSaving] = useState(false)
 
@@ -309,7 +314,7 @@ function NotesCard({
       setDraft("")
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to add note"
+        error instanceof Error ? error.message : t("notes.addFailed")
       )
     } finally {
       setSaving(false)
@@ -318,21 +323,21 @@ function NotesCard({
 
   return (
     <div className="rounded-xl border bg-card">
-      <h2 className="p-5 pb-3 text-lg font-semibold">Notes</h2>
+      <h2 className="p-5 pb-3 text-lg font-semibold">{t("notes.title")}</h2>
       <div className="flex flex-col gap-2 px-5">
         <Textarea
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          placeholder="Write a note…"
+          placeholder={t("notes.placeholder")}
         />
         <div className="flex justify-end">
           <Button size="sm" onClick={handleAdd} disabled={saving || !draft.trim()}>
-            {saving ? "Adding…" : "Add note"}
+            {saving ? t("notes.adding") : t("notes.add")}
           </Button>
         </div>
       </div>
       {notes.length === 0 ? (
-        <EmptyState icon={<StickyNoteIcon />} title="No notes yet." />
+        <EmptyState icon={<StickyNoteIcon />} title={t("notes.empty")} />
       ) : (
         <ul className="mt-3">
           {notes.map((note) => (
@@ -341,6 +346,7 @@ function NotesCard({
               <p className="mt-1 text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(note.created_at), {
                   addSuffix: true,
+                  locale: dateLocale(),
                 })}
               </p>
             </li>
@@ -352,13 +358,14 @@ function NotesCard({
 }
 
 function BackLink() {
+  const { t } = useTranslation()
   return (
     <Link
       to="/leads"
       className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-primary hover:underline"
     >
       <ArrowLeftIcon className="size-4" />
-      Leads
+      {t("nav.leads")}
     </Link>
   )
 }

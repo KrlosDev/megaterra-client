@@ -21,15 +21,14 @@ import {
   type Lead,
   type Project,
 } from "@/services"
-import { HEADER_GRADIENTS, PROJECT_STATUS_LABELS } from "@/lib/project-format"
+import { useTranslation } from "react-i18next"
+import { HEADER_GRADIENTS } from "@/lib/project-format"
 import {
-  INVENTORY_STATUS_LABELS,
   INVENTORY_STATUS_VARIANTS,
   formatPrice,
   formatSize,
 } from "@/lib/inventory-format"
-import { LEAD_STAGE_LABELS } from "@/lib/lead-format"
-import { APPOINTMENT_TYPE_LABELS } from "@/lib/appointment-format"
+import { dateLocale } from "@/lib/locale"
 import { usePageTitleStore } from "@/stores/page-title-store"
 import { AppointmentStatusBadge } from "@/components/appointments/appointment-status-badge"
 import { Badge } from "@/components/ui/badge"
@@ -43,6 +42,7 @@ export const Route = createFileRoute("/_authenticated/projects/$projectId")({
 })
 
 function RouteComponent() {
+  const { t } = useTranslation()
   const { projectId } = Route.useParams()
   const [project, setProject] = useState<Project | null>(null)
   const [units, setUnits] = useState<InventoryUnit[]>([])
@@ -71,7 +71,7 @@ function RouteComponent() {
       })
       .catch((error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to load project"
+          error instanceof Error ? error.message : t("projects.loadOneFailed")
         )
       })
       .finally(() => {
@@ -95,34 +95,34 @@ function RouteComponent() {
     () => [
       {
         id: "unit",
-        header: "Unit",
+        header: t("projects.unit"),
         accessor: (unit) => unit.unit,
         cell: (unit) => <span className="font-medium">{unit.unit}</span>,
       },
       {
         id: "size",
-        header: "Size",
+        header: t("projects.size"),
         accessor: (unit) => unit.unit_size,
         cell: (unit) => formatSize(unit.unit_size, project?.size_type ?? null),
       },
       {
         id: "price",
-        header: "Price",
+        header: t("projects.price"),
         accessor: (unit) => unit.price,
         cell: (unit) => formatPrice(unit.price, project?.currency ?? null),
       },
       {
         id: "status",
-        header: "Status",
+        header: t("common.status"),
         accessor: (unit) => unit.status,
         cell: (unit) => (
           <Badge variant={INVENTORY_STATUS_VARIANTS[unit.status]}>
-            {INVENTORY_STATUS_LABELS[unit.status]}
+            {t(`inventory.statuses.${unit.status}`)}
           </Badge>
         ),
       },
     ],
-    [project?.size_type, project?.currency]
+    [t, project?.size_type, project?.currency]
   )
 
   if (loading) {
@@ -143,7 +143,7 @@ function RouteComponent() {
     return (
       <div className="flex flex-col gap-4">
         <BackLink />
-        <p className="text-muted-foreground">Project not found.</p>
+        <p className="text-muted-foreground">{t("projects.notFound")}</p>
       </div>
     )
   }
@@ -183,7 +183,7 @@ function RouteComponent() {
         )}
       >
         <Badge className="bg-background text-foreground hover:bg-background">
-          {PROJECT_STATUS_LABELS[project.project_status]}
+          {t(`projects.statuses.${project.project_status}`)}
         </Badge>
         <h1 className="mt-3 text-3xl font-bold text-slate-900">
           {project.project_name}
@@ -208,25 +208,30 @@ function RouteComponent() {
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
           icon={<UsersIcon className="size-5" />}
-          label="Leads"
+          label={t("projects.leads")}
           value={String(leads.length)}
         />
         <StatCard
           icon={<CalendarIcon className="size-5" />}
-          label="Appointments"
+          label={t("projects.appointments")}
           value={String(appointments.length)}
         />
         <StatCard
           icon={<HomeIcon className="size-5" />}
-          label="Units"
-          value={`${unitsAvailable}/${unitsTotal} available`}
+          label={t("projects.units")}
+          value={t("projects.unitsAvailable", {
+            available: unitsAvailable,
+            total: unitsTotal,
+          })}
         />
       </div>
 
       {/* Progress */}
       <div className="rounded-xl border bg-card p-5">
         <div className="mb-2 flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Commercial progress</span>
+          <span className="text-muted-foreground">
+            {t("projects.commercialProgress")}
+          </span>
           <span className="font-semibold">{soldPct}%</span>
         </div>
         <Progress value={soldPct} />
@@ -234,14 +239,16 @@ function RouteComponent() {
 
       {/* Inventory */}
       <div className="overflow-hidden rounded-xl border bg-card">
-        <h2 className="p-5 pb-3 text-lg font-semibold">Unit inventory</h2>
+        <h2 className="p-5 pb-3 text-lg font-semibold">
+          {t("projects.unitInventory")}
+        </h2>
         {/* Drop the DataTable's own border/rounding so it merges into the card;
             keep only its top edge as the divider under the heading. */}
         <div className="[&>div]:rounded-none [&>div]:border-x-0 [&>div]:border-b-0">
           <DataTable
             data={units}
             columns={unitColumns}
-            emptyMessage="No units yet."
+            emptyMessage={t("projects.noUnits")}
             resizable
           />
         </div>
@@ -250,10 +257,12 @@ function RouteComponent() {
       {/* Leads + Appointments */}
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-xl border bg-card">
-          <h2 className="p-5 pb-2 text-lg font-semibold">Project leads</h2>
+          <h2 className="p-5 pb-2 text-lg font-semibold">
+            {t("projects.projectLeads")}
+          </h2>
           <ul>
             {leads.length === 0 ? (
-              <EmptyRow>No leads for this project.</EmptyRow>
+              <EmptyRow>{t("projects.noLeadsForProject")}</EmptyRow>
             ) : (
               leads.map((lead) => (
                 <li
@@ -263,7 +272,7 @@ function RouteComponent() {
                   <div>
                     <div className="font-medium">{lead.lead_name}</div>
                     <div className="text-xs text-muted-foreground">
-                      {LEAD_STAGE_LABELS[lead.lead_stage]}
+                      {t(`leads.stages.${lead.lead_stage}`)}
                     </div>
                   </div>
                   <span className="text-sm text-muted-foreground">
@@ -276,10 +285,12 @@ function RouteComponent() {
         </div>
 
         <div className="rounded-xl border bg-card">
-          <h2 className="p-5 pb-2 text-lg font-semibold">Project appointments</h2>
+          <h2 className="p-5 pb-2 text-lg font-semibold">
+            {t("projects.projectAppointments")}
+          </h2>
           <ul>
             {appointments.length === 0 ? (
-              <EmptyRow>No appointments for this project.</EmptyRow>
+              <EmptyRow>{t("projects.noApptsForProject")}</EmptyRow>
             ) : (
               appointments.map((appt) => (
                 <li
@@ -293,8 +304,10 @@ function RouteComponent() {
                         {appt.lead?.lead_name ?? "—"}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {format(new Date(appt.scheduled_at), "MMM d · HH:mm")} ·{" "}
-                        {APPOINTMENT_TYPE_LABELS[appt.appointment_type]}
+                        {format(new Date(appt.scheduled_at), "MMM d · HH:mm", {
+                          locale: dateLocale(),
+                        })}{" "}
+                        · {t(`appointments.types.${appt.appointment_type}`)}
                       </div>
                     </div>
                   </div>
@@ -310,13 +323,14 @@ function RouteComponent() {
 }
 
 function BackLink() {
+  const { t } = useTranslation()
   return (
     <Link
       to="/projects"
       className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-primary hover:underline"
     >
       <ArrowLeftIcon className="size-4" />
-      Projects
+      {t("nav.projects")}
     </Link>
   )
 }

@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { CountrySelect } from "react-country-state-city"
 import "react-country-state-city/dist/react-country-state-city.css"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import {
   projectsService,
@@ -103,6 +104,7 @@ function ProjectForm({
   onSaved: (project: Project) => void
 }) {
   const isEdit = Boolean(project)
+  const { t } = useTranslation()
   const [form, setForm] = useState<FormState>(() => initialForm(project))
   const [saving, setSaving] = useState(false)
 
@@ -121,7 +123,7 @@ function ProjectForm({
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!form.project_name.trim() || !form.project_status) {
-      toast.error("Name and status are required")
+      toast.error(t("projects.nameStatusRequired"))
       return
     }
     setSaving(true)
@@ -140,13 +142,15 @@ function ProjectForm({
         isEdit && project
           ? await projectsService.update(project.id, payload)
           : await projectsService.create(payload)
-      toast.success(isEdit ? "Project updated" : "Project created")
+      toast.success(isEdit ? t("projects.updated") : t("projects.created"))
       onSaved(saved)
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : `Failed to ${isEdit ? "update" : "create"} project`
+          : isEdit
+            ? t("projects.updateFailed")
+            : t("projects.createFailed")
       )
     } finally {
       setSaving(false)
@@ -156,11 +160,13 @@ function ProjectForm({
   return (
     <>
       <SheetHeader>
-        <SheetTitle>{isEdit ? "Edit project" : "New project"}</SheetTitle>
+        <SheetTitle>
+          {isEdit ? t("projects.editProject") : t("projects.newProject")}
+        </SheetTitle>
         <SheetDescription>
           {isEdit
-            ? "Update this project's details."
-            : "Add a real estate project to the portfolio."}
+            ? t("projects.editProjectDescription")
+            : t("projects.newProjectDescription")}
         </SheetDescription>
       </SheetHeader>
 
@@ -169,7 +175,7 @@ function ProjectForm({
         className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 pb-6"
       >
         <Field>
-          <FieldLabel htmlFor="project_name">Name *</FieldLabel>
+          <FieldLabel htmlFor="project_name">{t("projects.name")} *</FieldLabel>
           <Input
             id="project_name"
             value={form.project_name}
@@ -179,18 +185,18 @@ function ProjectForm({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="project_status">Status *</FieldLabel>
+          <FieldLabel htmlFor="project_status">{t("common.status")} *</FieldLabel>
           <Select
             value={form.project_status || undefined}
             onValueChange={(value) => set("project_status", value as ProjectStatus)}
           >
             <SelectTrigger id="project_status" className="w-full">
-              <SelectValue placeholder="Select status" />
+              <SelectValue placeholder={t("projects.selectStatus")} />
             </SelectTrigger>
             <SelectContent>
               {STATUS_OPTIONS.map((status) => (
                 <SelectItem key={status} value={status}>
-                  {PROJECT_STATUS_LABELS[status]}
+                  {t(`projects.statuses.${status}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -198,11 +204,11 @@ function ProjectForm({
         </Field>
 
         <Field>
-          <FieldLabel>Country</FieldLabel>
+          <FieldLabel>{t("projects.country")}</FieldLabel>
           <CountrySelect
             containerClassName="w-full"
             inputClassName="w-full"
-            placeHolder={form.country || "Select country"}
+            placeHolder={form.country || t("projects.selectCountry")}
             onChange={(country) => {
               // onChange is typed as ChangeEvent | Country; narrow to Country.
               if (!("name" in country)) return
@@ -214,13 +220,13 @@ function ProjectForm({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="currency">Currency</FieldLabel>
+          <FieldLabel htmlFor="currency">{t("projects.currency")}</FieldLabel>
           <Select
             value={form.currency || undefined}
             onValueChange={(value) => set("currency", value)}
           >
             <SelectTrigger id="currency" className="w-full">
-              <SelectValue placeholder="Select currency" />
+              <SelectValue placeholder={t("projects.selectCurrency")} />
             </SelectTrigger>
             <SelectContent position="popper" className="max-h-60">
               {currencyOptions.map((code) => (
@@ -233,13 +239,13 @@ function ProjectForm({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="size_type">Size unit</FieldLabel>
+          <FieldLabel htmlFor="size_type">{t("projects.sizeUnit")}</FieldLabel>
           <Select
             value={form.size_type || undefined}
             onValueChange={(value) => set("size_type", value as SizeType)}
           >
             <SelectTrigger id="size_type" className="w-full">
-              <SelectValue placeholder="Select size unit" />
+              <SelectValue placeholder={t("projects.selectSizeUnit")} />
             </SelectTrigger>
             <SelectContent>
               {SIZE_TYPE_OPTIONS.map((unit) => (
@@ -252,34 +258,36 @@ function ProjectForm({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="address">Address</FieldLabel>
+          <FieldLabel htmlFor="address">{t("projects.address")}</FieldLabel>
           <Input
             id="address"
             value={form.address}
             onChange={(event) => set("address", event.target.value)}
-            placeholder="Av. Balboa, Panama City"
+            placeholder={t("projects.phAddress")}
           />
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="project_description">Description</FieldLabel>
+          <FieldLabel htmlFor="project_description">
+            {t("projects.description")}
+          </FieldLabel>
           <Textarea
             id="project_description"
             value={form.project_description}
             onChange={(event) => set("project_description", event.target.value)}
-            placeholder="Beachfront pre-sale condos with early-buyer pricing."
+            placeholder={t("projects.phDescription")}
           />
         </Field>
 
         <Field>
           <FieldLabel htmlFor="inventory_description">
-            Inventory description
+            {t("projects.inventoryDescription")}
           </FieldLabel>
           <Textarea
             id="inventory_description"
             value={form.inventory_description}
             onChange={(event) => set("inventory_description", event.target.value)}
-            placeholder="Apartments, 2-3 bedrooms"
+            placeholder={t("projects.phInventoryDescription")}
           />
         </Field>
 
@@ -287,11 +295,11 @@ function ProjectForm({
           <Button type="submit" disabled={saving}>
             {saving
               ? isEdit
-                ? "Saving..."
-                : "Creating..."
+                ? t("common.saving")
+                : t("common.creating")
               : isEdit
-                ? "Save changes"
-                : "Create project"}
+                ? t("common.saveChanges")
+                : t("projects.createProject")}
           </Button>
         </SheetFooter>
       </form>

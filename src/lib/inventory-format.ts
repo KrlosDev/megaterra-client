@@ -1,5 +1,6 @@
 import type { InventoryStatus, SizeType, UnitType } from "@/services"
 import { SIZE_TYPE_LABELS } from "./project-format"
+import { activeLocale } from "./locale"
 
 /** Human-readable labels for the inventory status enum values. */
 export const INVENTORY_STATUS_LABELS: Record<InventoryStatus, string> = {
@@ -33,15 +34,16 @@ export function formatPrice(
 ): string {
   if (price == null) return "—"
   const amount = Number(price)
+  const locale = activeLocale()
   try {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: currency || "USD",
       maximumFractionDigits: 0,
     }).format(amount)
   } catch {
     // Unknown/invalid currency code — show the number with the raw code.
-    return `${amount.toLocaleString("en-US")}${currency ? ` ${currency}` : ""}`
+    return `${amount.toLocaleString(locale)}${currency ? ` ${currency}` : ""}`
   }
 }
 
@@ -51,6 +53,6 @@ export function formatSize(
   sizeType: SizeType | null
 ): string {
   if (size == null) return "—"
-  const value = Number(size).toLocaleString("en-US")
+  const value = Number(size).toLocaleString(activeLocale())
   return sizeType ? `${value} ${SIZE_TYPE_LABELS[sizeType]}` : value
 }

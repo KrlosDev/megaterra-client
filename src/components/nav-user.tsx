@@ -8,19 +8,29 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { BadgeCheckIcon, BellIcon, LogOutIcon } from "lucide-react"
+import { BadgeCheckIcon, BellIcon, LanguagesIcon, LogOutIcon } from "lucide-react"
 import { useNavigate } from "@tanstack/react-router"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
-import { authService } from "@/services"
+import { authService, type AppLanguage } from "@/services"
 import { useAuthStore } from "@/stores/auth-store"
 import { useCurrentUser } from "@/components/layout/current-user"
 
 export function NavUser() {
   const navigate = useNavigate()
+  const { t, i18n } = useTranslation()
   const { name, email, initials } = useCurrentUser()
+  const currentLanguage: AppLanguage = i18n.language?.startsWith("es")
+    ? "es"
+    : "en"
 
   async function handleLogout() {
     try {
@@ -29,9 +39,32 @@ export function NavUser() {
       navigate({ to: "/" })
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Something went wrong"
+        error instanceof Error ? error.message : t("common.somethingWentWrong")
       )
     }
+  }
+
+  // Switch language instantly, persist to the DB, and update the cached profile.
+  function handleLanguageChange(value: string) {
+    const lang = value as AppLanguage
+    if (lang === currentLanguage) return
+    void i18n.changeLanguage(lang)
+    authService
+      .setPreferredLanguage(lang)
+      .then(() => {
+        const profile = useAuthStore.getState().profile
+        if (profile) {
+          useAuthStore.getState().setProfile({
+            ...profile,
+            preferred_language: lang,
+          })
+        }
+      })
+      .catch((error) => {
+        toast.error(
+          error instanceof Error ? error.message : t("common.somethingWentWrong")
+        )
+      })
   }
 
   return (
@@ -73,17 +106,36 @@ export function NavUser() {
         <DropdownMenuGroup>
           <DropdownMenuItem>
             <BadgeCheckIcon />
-            Account
+            {t("account.account")}
           </DropdownMenuItem>
           <DropdownMenuItem>
             <BellIcon />
-            Notifications
+            {t("account.notifications")}
           </DropdownMenuItem>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <LanguagesIcon />
+              {t("account.language")}
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuRadioGroup
+                value={currentLanguage}
+                onValueChange={handleLanguageChange}
+              >
+                <DropdownMenuRadioItem value="en">
+                  {t("account.english")}
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="es">
+                  {t("account.spanish")}
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           <LogOutIcon />
-          Log out
+          {t("account.logOut")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -1,10 +1,10 @@
 import { useMemo } from "react"
 import { format } from "date-fns"
+import { useTranslation } from "react-i18next"
+import type { TFunction } from "i18next"
 import type { Appointment } from "@/services"
-import {
-  APPOINTMENT_TYPE_ICONS,
-  APPOINTMENT_TYPE_LABELS,
-} from "@/lib/appointment-format"
+import { APPOINTMENT_TYPE_ICONS } from "@/lib/appointment-format"
+import { dateLocale } from "@/lib/locale"
 import { AppointmentStatusBadge } from "@/components/appointments/appointment-status-badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -26,25 +26,26 @@ export function AppointmentList({
   appointments: Appointment[]
   onSelect: (appointment: Appointment) => void
 }) {
+  const { t } = useTranslation()
   // Group by project name, preserving the (soonest-first) input order.
   const groups = useMemo<ProjectGroup[]>(() => {
     const map = new Map<string, ProjectGroup>()
     for (const appt of appointments) {
-      const projectName = appt.project?.project_name ?? "Unassigned"
+      const projectName = appt.project?.project_name ?? t("appointments.unassigned")
       const group = map.get(projectName)
       if (group) group.appointments.push(appt)
       else map.set(projectName, { projectName, appointments: [appt] })
     }
     return Array.from(map.values())
-  }, [appointments])
+  }, [appointments, t])
 
   if (appointments.length === 0) {
     return (
       <Empty>
         <EmptyHeader>
-          <EmptyTitle>No appointments yet</EmptyTitle>
+          <EmptyTitle>{t("appointments.emptyTitle")}</EmptyTitle>
           <EmptyDescription>
-            Create your first appointment to get started.
+            {t("appointments.emptyDescription")}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -58,8 +59,10 @@ export function AppointmentList({
           <div className="flex items-center gap-2 border-l-2 border-primary pl-2">
             <h2 className="font-semibold">{group.projectName}</h2>
             <span className="text-sm text-muted-foreground">
-              · {group.appointments.length}{" "}
-              {group.appointments.length === 1 ? "appointment" : "appointments"}
+              ·{" "}
+              {t("appointments.count", {
+                count: group.appointments.length,
+              })}
             </span>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -68,6 +71,7 @@ export function AppointmentList({
                 key={appt.id}
                 appointment={appt}
                 onSelect={onSelect}
+                t={t}
               />
             ))}
           </div>
@@ -80,9 +84,11 @@ export function AppointmentList({
 function AppointmentCard({
   appointment,
   onSelect,
+  t,
 }: {
   appointment: Appointment
   onSelect: (appointment: Appointment) => void
+  t: TFunction
 }) {
   const TypeIcon = APPOINTMENT_TYPE_ICONS[appointment.appointment_type]
   return (
@@ -94,7 +100,7 @@ function AppointmentCard({
       <div className="flex items-center justify-between">
         <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
           <TypeIcon className="size-4" />
-          {APPOINTMENT_TYPE_LABELS[appointment.appointment_type]}
+          {t(`appointments.types.${appointment.appointment_type}`)}
         </span>
         <AppointmentStatusBadge status={appointment.status} />
       </div>
@@ -108,7 +114,9 @@ function AppointmentCard({
       </div>
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>
-          {format(new Date(appointment.scheduled_at), "yyyy-MM-dd · HH:mm")}
+          {format(new Date(appointment.scheduled_at), "yyyy-MM-dd · HH:mm", {
+            locale: dateLocale(),
+          })}
         </span>
         <span>
           {appointment.advisor?.display_name ||

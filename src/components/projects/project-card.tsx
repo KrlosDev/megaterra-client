@@ -9,9 +9,10 @@ import {
   PencilIcon,
   Trash2Icon,
 } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import { projectsService, type Project } from "@/services"
-import { HEADER_GRADIENTS, PROJECT_STATUS_LABELS } from "@/lib/project-format"
+import { HEADER_GRADIENTS } from "@/lib/project-format"
 import { formatPrice } from "@/lib/inventory-format"
 import { cn } from "@/lib/utils"
 import { ProjectSheet } from "@/components/projects/project-sheet"
@@ -55,6 +56,7 @@ export function ProjectCard({
   onSaved: (project: Project) => void
   onDeleted: (id: string) => void
 }) {
+  const { t } = useTranslation()
   const [deleting, setDeleting] = useState(false)
 
   const location = project.address || project.country || null
@@ -67,11 +69,11 @@ export function ProjectCard({
     setDeleting(true)
     try {
       await projectsService.remove(project.id)
-      toast.success("Project deleted")
+      toast.success(t("projects.deleted"))
       onDeleted(project.id)
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete project"
+        error instanceof Error ? error.message : t("projects.deleteFailed")
       )
     } finally {
       setDeleting(false)
@@ -88,7 +90,7 @@ export function ProjectCard({
         )}
       >
         <span className="absolute top-2 left-2 rounded-full bg-background px-2 py-0.5 text-xs font-medium text-foreground shadow-sm">
-          {PROJECT_STATUS_LABELS[project.project_status]}
+          {t(`projects.statuses.${project.project_status}`)}
         </span>
         {isAdmin && (
           <div className="absolute top-2 right-2 flex items-center gap-1">
@@ -100,7 +102,7 @@ export function ProjectCard({
                   size="icon-sm"
                   variant="secondary"
                   className="rounded-full bg-background hover:bg-background/80"
-                  aria-label="Edit project"
+                  aria-label={t("projects.editAria")}
                 >
                   <PencilIcon />
                 </Button>
@@ -112,7 +114,7 @@ export function ProjectCard({
                   size="icon-sm"
                   variant="secondary"
                   className="rounded-full bg-background text-destructive hover:bg-background/80"
-                  aria-label="Delete project"
+                  aria-label={t("projects.deleteAria")}
                 >
                   <Trash2Icon />
                 </Button>
@@ -120,24 +122,22 @@ export function ProjectCard({
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>
-                    Delete {project.project_name}?
+                    {t("projects.deleteTitle", { name: project.project_name })}
                   </AlertDialogTitle>
                   <AlertDialogDescription>
-                    The project will be removed from the list. Its leads,
-                    inventory and appointments are kept and can be restored by
-                    an admin.
+                    {t("projects.deleteDescription")}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel disabled={deleting}>
-                    Cancel
+                    {t("common.cancel")}
                   </AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleDelete}
                     disabled={deleting}
                     className="bg-destructive text-white hover:bg-destructive/90"
                   >
-                    {deleting ? "Deleting..." : "Delete"}
+                    {deleting ? t("projects.deleting") : t("common.delete")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -172,13 +172,13 @@ export function ProjectCard({
           />
           <InfoRow
             icon={<LayoutGridIcon className="size-3.5" />}
-            value={`${stats.unitsCount} ${stats.unitsCount === 1 ? "unit" : "units"}`}
+            value={t("projects.unitsCount", { count: stats.unitsCount })}
           />
         </dl>
 
         <div className="mt-auto flex flex-col gap-1 pt-1">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Progress</span>
+            <span className="text-muted-foreground">{t("projects.progress")}</span>
             <span className="font-medium">{stats.soldPct}%</span>
           </div>
           <Progress value={stats.soldPct} />
@@ -186,17 +186,16 @@ export function ProjectCard({
 
         {/* Footer */}
         <div className="flex items-center gap-3 border-t pt-2.5 text-xs font-semibold text-primary">
-          <span>{stats.leadsCount} leads</span>
+          <span>{t("projects.leadsCount", { count: stats.leadsCount })}</span>
           <span>
-            {stats.appointmentsCount}{" "}
-            {stats.appointmentsCount === 1 ? "appt" : "appts"}
+            {t("projects.apptsCount", { count: stats.appointmentsCount })}
           </span>
           <Link
             to="/projects/$projectId"
             params={{ projectId: project.id }}
             className="ml-auto inline-flex items-center gap-0.5 hover:underline"
           >
-            View
+            {t("projects.view")}
             <ArrowRightIcon className="size-3" />
           </Link>
         </div>

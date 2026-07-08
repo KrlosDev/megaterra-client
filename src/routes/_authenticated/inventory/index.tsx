@@ -1,17 +1,15 @@
 import { useEffect, useMemo, useState } from "react"
 import { createFileRoute } from "@tanstack/react-router"
 import { BookmarkIcon, CalculatorIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
+import type { TFunction } from "i18next"
 import { toast } from "sonner"
 import {
   inventoryService,
   type InventoryStatus,
   type InventoryUnit,
 } from "@/services"
-import {
-  INVENTORY_STATUS_LABELS,
-  formatPrice,
-  formatSize,
-} from "@/lib/inventory-format"
+import { formatPrice, formatSize } from "@/lib/inventory-format"
 import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/stores/auth-store"
 import {
@@ -42,22 +40,28 @@ const STATUS_BADGE_CLASS: Record<InventoryStatus, string> = {
 
 // "all" and the status values filter active-project units; "archived"/"deleted"
 // are admin-only views onto units whose parent project record was soft-removed.
-const FILTERS: { value: InventoryStatusFilter; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "available", label: INVENTORY_STATUS_LABELS.available },
-  { value: "under_contract", label: INVENTORY_STATUS_LABELS.under_contract },
-  { value: "sold", label: INVENTORY_STATUS_LABELS.sold },
+const FILTER_VALUES: InventoryStatusFilter[] = [
+  "all",
+  "available",
+  "under_contract",
+  "sold",
 ]
 
 // Only shown to admins — reveal units belonging to archived / deleted projects.
-const ADMIN_FILTERS: { value: InventoryStatusFilter; label: string }[] = [
-  { value: "archived", label: "Archived" },
-  { value: "deleted", label: "Deleted" },
-]
+const ADMIN_FILTER_VALUES: InventoryStatusFilter[] = ["archived", "deleted"]
+
+/** Label for a status filter pill in the active language. */
+function filterLabel(t: TFunction, value: InventoryStatusFilter): string {
+  if (value === "all") return t("common.all")
+  if (value === "archived") return t("inventory.archived")
+  if (value === "deleted") return t("inventory.deleted")
+  return t(`inventory.statuses.${value}`)
+}
 
 // Columns for the inventory DataTable. Built as a factory so the row actions can
 // close over the page's "open quoter" callback.
 function createInventoryColumns(
+  t: TFunction,
   onQuote: (unit: InventoryUnit) => void
 ): DataTableColumn<InventoryUnit>[] {
   const sizeOf = (unit: InventoryUnit) =>
@@ -65,7 +69,7 @@ function createInventoryColumns(
   return [
     {
       id: "project",
-      header: "Project",
+      header: t("inventory.project"),
       accessor: (unit) => unit.project?.project_name ?? null,
       enableFilter: true,
       cell: (unit) => (
@@ -74,7 +78,7 @@ function createInventoryColumns(
     },
     {
       id: "unit",
-      header: "Unit",
+      header: t("inventory.unit"),
       accessor: (unit) => unit.unit,
       enableFilter: true,
       cell: (unit) => {
@@ -82,31 +86,36 @@ function createInventoryColumns(
         return size !== "—" ? `${unit.unit} — ${size}` : unit.unit
       },
     },
-    { id: "size", header: "M²", accessor: (unit) => unit.unit_size, cell: sizeOf },
+    {
+      id: "size",
+      header: t("inventory.size"),
+      accessor: (unit) => unit.unit_size,
+      cell: sizeOf,
+    },
     {
       id: "price",
-      header: "Price",
+      header: t("inventory.price"),
       accessor: (unit) => unit.price,
       cell: (unit) => formatPrice(unit.price, unit.project?.currency ?? null),
     },
     {
       id: "status",
-      header: "Status",
+      header: t("common.status"),
       accessor: (unit) => unit.status,
       enableFilter: true,
-      filterLabel: (value) => INVENTORY_STATUS_LABELS[value as InventoryStatus],
+      filterLabel: (value) => t(`inventory.statuses.${value as InventoryStatus}`),
       cell: (unit) => (
         <Badge
           variant="outline"
           className={cn("rounded-full", STATUS_BADGE_CLASS[unit.status])}
         >
-          {INVENTORY_STATUS_LABELS[unit.status]}
+          {t(`inventory.statuses.${unit.status}`)}
         </Badge>
       ),
     },
     {
       id: "actions",
-      header: "Actions",
+      header: t("common.actions"),
       align: "right",
       enableSorting: false,
       enableHiding: false,
@@ -114,12 +123,20 @@ function createInventoryColumns(
       cell: (unit) =>
         unit.status === "available" ? (
           <div className="flex justify-end gap-2">
-            <Button size="sm" variant="outline" onClick={() => onQuote(unit)}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onQuote(unit)}
+              aria-label={t("inventory.quote")}
+            >
               <CalculatorIcon />
             </Button>
-            <Button size="sm" onClick={() => toast("Reservations coming soon")}>
+            <Button
+              size="sm"
+              onClick={() => toast(t("inventory.reservationsComingSoon"))}
+            >
               <BookmarkIcon />
-              Reserve
+              {t("inventory.reserve")}
             </Button>
           </div>
         ) : null,
@@ -128,11 +145,12 @@ function createInventoryColumns(
 }
 
 function RouteComponent() {
+  const { t } = useTranslation()
   const [units, setUnits] = useState<InventoryUnit[]>([])
   const [loading, setLoading] = useState(true)
   const [quoteUnit, setQuoteUnit] = useState<InventoryUnit | null>(null)
   const isAdmin = useAuthStore((state) => state.profile?.role === "admin")
-  const columns = useMemo(() => createInventoryColumns(setQuoteUnit), [])
+  const columns = useMemo(() => createInventoryColumns(t, setQuoteUnit), [t])
   const store = useInventoryStore()
   const filter = store.statusFilter
   const setFilter = store.setStatusFilter
@@ -146,7 +164,7 @@ function RouteComponent() {
       })
       .catch((error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to load inventory"
+          error instanceof Error ? error.message : t("inventory.loadFailed")
         )
       })
       .finally(() => {
@@ -183,13 +201,18 @@ function RouteComponent() {
   }, [units, filter])
 
   const stats = [
-    { label: "Total Units", value: counts.total },
-    { label: INVENTORY_STATUS_LABELS.available, value: counts.available },
+    { key: "total", label: t("inventory.totalUnits"), value: counts.total },
     {
-      label: INVENTORY_STATUS_LABELS.under_contract,
+      key: "available",
+      label: t("inventory.statuses.available"),
+      value: counts.available,
+    },
+    {
+      key: "under_contract",
+      label: t("inventory.statuses.under_contract"),
       value: counts.under_contract,
     },
-    { label: INVENTORY_STATUS_LABELS.sold, value: counts.sold },
+    { key: "sold", label: t("inventory.statuses.sold"), value: counts.sold },
   ]
 
   return (
@@ -203,7 +226,7 @@ function RouteComponent() {
       {/* Summary stat cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.label} size="sm" className="py-2">
+          <Card key={stat.key} size="sm" className="py-2">
             <CardContent className="flex items-baseline justify-between gap-2">
               <span className="text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
                 {stat.label}
@@ -218,27 +241,27 @@ function RouteComponent() {
 
       {/* Status filter pills (archived/deleted are admin-only) */}
       <div className="flex flex-wrap items-center gap-2">
-        {FILTERS.map((filterOption) => (
+        {FILTER_VALUES.map((value) => (
           <Button
-            key={filterOption.value}
+            key={value}
             size="sm"
-            variant={filter === filterOption.value ? "default" : "outline"}
-            onClick={() => setFilter(filterOption.value)}
+            variant={filter === value ? "default" : "outline"}
+            onClick={() => setFilter(value)}
           >
-            {filterOption.label}
+            {filterLabel(t, value)}
           </Button>
         ))}
         {isAdmin && (
           <>
             <div className="mx-1 h-5 w-px bg-border" aria-hidden />
-            {ADMIN_FILTERS.map((filterOption) => (
+            {ADMIN_FILTER_VALUES.map((value) => (
               <Button
-                key={filterOption.value}
+                key={value}
                 size="sm"
-                variant={filter === filterOption.value ? "default" : "outline"}
-                onClick={() => setFilter(filterOption.value)}
+                variant={filter === value ? "default" : "outline"}
+                onClick={() => setFilter(value)}
               >
-                {filterOption.label}
+                {filterLabel(t, value)}
               </Button>
             ))}
           </>
@@ -251,7 +274,7 @@ function RouteComponent() {
         loading={loading}
         resizable
         columnsPanel
-        emptyMessage="No inventory yet."
+        emptyMessage={t("inventory.empty")}
         sorting={store.sorting}
         onSortingChange={store.setSorting}
         columnFilters={store.columnFilters}

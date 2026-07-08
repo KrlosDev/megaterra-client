@@ -1,6 +1,6 @@
 export { default as supabase } from "./supabase"
 export { authService } from "./auth.service"
-export type { Profile, AppRole, IdType } from "./auth.service"
+export type { Profile, AppRole, IdType, AppLanguage } from "./auth.service"
 export { projectsService } from "./projects.service"
 export type {
   Project,

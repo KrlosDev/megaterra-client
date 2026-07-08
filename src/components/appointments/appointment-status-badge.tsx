@@ -1,8 +1,6 @@
+import { useTranslation } from "react-i18next"
 import type { AppointmentStatus } from "@/services"
-import {
-  APPOINTMENT_STATUS_DOT_COLORS,
-  APPOINTMENT_STATUS_LABELS,
-} from "@/lib/appointment-format"
+import { APPOINTMENT_STATUS_DOT_COLORS } from "@/lib/appointment-format"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 
@@ -18,6 +16,7 @@ export function AppointmentStatusBadge({
   status: AppointmentStatus
   className?: string
 }) {
+  const { t } = useTranslation()
   return (
     <Badge variant="outline" className={cn("gap-1.5", className)}>
       <span
@@ -26,7 +25,7 @@ export function AppointmentStatusBadge({
           APPOINTMENT_STATUS_DOT_COLORS[status]
         )}
       />
-      {APPOINTMENT_STATUS_LABELS[status]}
+      {t(`appointments.statuses.${status}`)}
     </Badge>
   )
 }

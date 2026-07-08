@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { createFileRoute } from "@tanstack/react-router"
 import { LayoutGridIcon, ListIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import { appointmentsService, type Appointment } from "@/services"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/_authenticated/appointments/")({
 })
 
 function RouteComponent() {
+  const { t } = useTranslation()
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<Appointment | null>(null)
@@ -37,7 +39,7 @@ function RouteComponent() {
       })
       .catch((error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to load appointments"
+          error instanceof Error ? error.message : t("appointments.loadFailed")
         )
       })
       .finally(() => {
@@ -77,11 +79,11 @@ function RouteComponent() {
             <TabsList className="h-7">
               <TabsTrigger value="calendar">
                 <LayoutGridIcon />
-                Calendar
+                {t("appointments.calendar")}
               </TabsTrigger>
               <TabsTrigger value="list">
                 <ListIcon />
-                List
+                {t("appointments.list")}
               </TabsTrigger>
             </TabsList>
             <CreateAppointmentSheet onCreated={handleCreated} />

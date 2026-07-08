@@ -8,6 +8,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import { leadsService, type Lead, type LeadStage } from "@/services"
 import { LEAD_STAGE_ORDER } from "@/lib/lead-format"
@@ -21,6 +22,7 @@ type PipelineBoardProps = {
 
 /** Kanban board: one column per lead stage, drag a card to change its stage. */
 export function PipelineBoard({ leads, onLeadsChange }: PipelineBoardProps) {
+  const { t } = useTranslation()
   const [activeId, setActiveId] = useState<string | null>(null)
 
   // A small activation distance so clicks don't register as drags.
@@ -66,7 +68,7 @@ export function PipelineBoard({ leads, onLeadsChange }: PipelineBoardProps) {
         prev.map((l) => (l.id === leadId ? { ...l, lead_stage: prevStage } : l))
       )
       toast.error(
-        error instanceof Error ? error.message : "Failed to move lead"
+        error instanceof Error ? error.message : t("pipeline.moveFailed")
       )
     })
   }

@@ -1,7 +1,9 @@
 import { useRouterState } from "@tanstack/react-router"
+import { useTranslation } from "react-i18next"
 import { usePageTitleStore } from "@/stores/page-title-store"
 
 export function usePageTitle() {
+  const { t } = useTranslation()
   const override = usePageTitleStore((state) => state.override)
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
@@ -23,13 +25,16 @@ export function usePageTitle() {
   }
 
   if (!segment) {
-    return "Home"
+    return t("nav.home")
   }
 
-  return segment
+  // Prefer the translated nav label for this route segment; fall back to the
+  // title-cased slug for any route without a nav entry.
+  const titleCased = segment
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ")
+  return t(`nav.${segment}`, { defaultValue: titleCased })
 }
 
 const UUID_RE =

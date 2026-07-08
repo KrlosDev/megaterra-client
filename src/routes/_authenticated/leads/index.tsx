@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { format } from "date-fns"
 import { PlusIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
+import type { TFunction } from "i18next"
 import { toast } from "sonner"
 import {
   leadsService,
@@ -10,11 +12,9 @@ import {
   type LeadTemperature,
 } from "@/services"
 import {
-  LEAD_STAGE_LABELS,
   LEAD_STAGE_GROUPS,
   LEAD_STAGE_GROUP_LABELS,
   type LeadStageGroup,
-  LEAD_TEMPERATURE_LABELS,
   LEAD_TEMPERATURE_VARIANTS,
   formatBudget,
 } from "@/lib/lead-format"
@@ -40,92 +40,99 @@ function fmtDate(value: string | null): string {
   return value ? format(new Date(value), "MMM d, yyyy") : "—"
 }
 
-const leadColumns: DataTableColumn<Lead>[] = [
-  {
-    id: "name",
-    header: "Name",
-    accessor: (lead) => lead.lead_name,
-    cell: (lead) => <span className="font-medium">{lead.lead_name}</span>,
-    enableFilter: false,
-  },
-  {
-    id: "email",
-    header: "Email",
-    accessor: (lead) => lead.lead_email,
-    enableFilter: false,
-  },
-  {
-    id: "phone",
-    header: "Phone",
-    accessor: (lead) => lead.lead_phone,
-    enableFilter: false,
-  },
-  { id: "source", header: "Source", accessor: (lead) => lead.lead_source },
-  { id: "interest", header: "Interest", accessor: (lead) => lead.target_interest },
-  {
-    id: "budget",
-    header: "Budget",
-    accessor: (lead) => lead.budget_min,
-    cell: (lead) =>
-      formatBudget(lead.budget_min, lead.budget_max, lead.project?.currency ?? null),
-    enableFilter: false,
-    // align: "right",
-  },
-  {
-    id: "temperature",
-    header: "Temperature",
-    align: "center",
-    accessor: (lead) => lead.temperature,
-    filterLabel: (value) =>
-      value ? LEAD_TEMPERATURE_LABELS[value as LeadTemperature] : "(Blank)",
-    cell: (lead) =>
-      lead.temperature ? (
-        <Badge variant={LEAD_TEMPERATURE_VARIANTS[lead.temperature]}>
-          {LEAD_TEMPERATURE_LABELS[lead.temperature]}
-        </Badge>
-      ) : (
-        "—"
+function createLeadColumns(t: TFunction): DataTableColumn<Lead>[] {
+  return [
+    {
+      id: "name",
+      header: t("leads.name"),
+      accessor: (lead) => lead.lead_name,
+      cell: (lead) => <span className="font-medium">{lead.lead_name}</span>,
+      enableFilter: false,
+    },
+    {
+      id: "email",
+      header: t("leads.email"),
+      accessor: (lead) => lead.lead_email,
+      enableFilter: false,
+    },
+    {
+      id: "phone",
+      header: t("leads.phone"),
+      accessor: (lead) => lead.lead_phone,
+      enableFilter: false,
+    },
+    { id: "source", header: t("leads.source"), accessor: (lead) => lead.lead_source },
+    {
+      id: "interest",
+      header: t("leads.interest"),
+      accessor: (lead) => lead.target_interest,
+    },
+    {
+      id: "budget",
+      header: t("leads.budget"),
+      accessor: (lead) => lead.budget_min,
+      cell: (lead) =>
+        formatBudget(lead.budget_min, lead.budget_max, lead.project?.currency ?? null),
+      enableFilter: false,
+    },
+    {
+      id: "temperature",
+      header: t("leads.temperature"),
+      align: "center",
+      accessor: (lead) => lead.temperature,
+      filterLabel: (value) =>
+        value ? t(`leads.temperatures.${value as LeadTemperature}`) : t("leads.blank"),
+      cell: (lead) =>
+        lead.temperature ? (
+          <Badge variant={LEAD_TEMPERATURE_VARIANTS[lead.temperature]}>
+            {t(`leads.temperatures.${lead.temperature}`)}
+          </Badge>
+        ) : (
+          "—"
+        ),
+    },
+    {
+      id: "stage",
+      header: t("leads.stage"),
+      accessor: (lead) => lead.lead_stage,
+      filterLabel: (value) => t(`leads.stages.${value as LeadStage}`),
+      cell: (lead) => (
+        <Badge variant="outline">{t(`leads.stages.${lead.lead_stage}`)}</Badge>
       ),
-  },
-  {
-    id: "stage",
-    header: "Stage",
-    accessor: (lead) => lead.lead_stage,
-    filterLabel: (value) => LEAD_STAGE_LABELS[value as LeadStage],
-    cell: (lead) => (
-      <Badge variant="outline">{LEAD_STAGE_LABELS[lead.lead_stage]}</Badge>
-    ),
-  },
-  {
-    id: "project",
-    header: "Project",
-    accessor: (lead) => lead.project?.project_name ?? null,
-  },
-  {
-    id: "advisor",
-    header: "Advisor",
-    accessor: (lead) => lead.advisor?.display_name || lead.advisor?.email || null,
-  },
-  {
-    id: "created",
-    header: "Created",
-    accessor: (lead) => lead.created_date,
-    cell: (lead) => fmtDate(lead.created_date),
-    enableFilter: false,
-  },
-  {
-    id: "last_contacted",
-    header: "Last contacted",
-    accessor: (lead) => lead.last_contacted,
-    cell: (lead) => fmtDate(lead.last_contacted),
-    enableFilter: false,
-  },
-]
+    },
+    {
+      id: "project",
+      header: t("leads.project"),
+      accessor: (lead) => lead.project?.project_name ?? null,
+    },
+    {
+      id: "advisor",
+      header: t("leads.advisor"),
+      accessor: (lead) => lead.advisor?.display_name || lead.advisor?.email || null,
+    },
+    {
+      id: "created",
+      header: t("leads.createdCol"),
+      accessor: (lead) => lead.created_date,
+      cell: (lead) => fmtDate(lead.created_date),
+      enableFilter: false,
+    },
+    {
+      id: "last_contacted",
+      header: t("leads.lastContacted"),
+      accessor: (lead) => lead.last_contacted,
+      cell: (lead) => fmtDate(lead.last_contacted),
+      enableFilter: false,
+    },
+  ]
+}
 
 function RouteComponent() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
+  const leadColumns = useMemo(() => createLeadColumns(t), [t])
 
   useEffect(() => {
     let active = true
@@ -136,7 +143,7 @@ function RouteComponent() {
       })
       .catch((error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to load leads"
+          error instanceof Error ? error.message : t("leads.loadFailed")
         )
       })
       .finally(() => {
@@ -183,11 +190,11 @@ function RouteComponent() {
   // Summary cards double as the filter: "Total Leads" clears it, each group
   // card filters to that group's stages.
   const cards: { value: LeadGroupFilter; label: string; count: number }[] = [
-    { value: "all", label: "Total Leads", count: leads.length },
+    { value: "all", label: t("leads.totalLeads"), count: leads.length },
     ...(Object.keys(LEAD_STAGE_GROUP_LABELS) as LeadStageGroup[]).map(
       (group) => ({
         value: group,
-        label: LEAD_STAGE_GROUP_LABELS[group],
+        label: t(`leads.groups.${group}`),
         count: counts[group],
       })
     ),
@@ -200,7 +207,7 @@ function RouteComponent() {
           trigger={
             <Button size="sm">
               <PlusIcon />
-              New lead
+              {t("leads.newLead")}
             </Button>
           }
           onSaved={(lead) => setLeads((prev) => [lead, ...prev])}
@@ -253,7 +260,7 @@ function RouteComponent() {
         filterable
         resizable
         columnsPanel
-        emptyMessage="No leads yet."
+        emptyMessage={t("leads.empty")}
         sorting={tableView.sorting}
         onSortingChange={tableView.setSorting}
         columnFilters={tableView.columnFilters}

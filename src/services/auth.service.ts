@@ -2,6 +2,7 @@ import supabase from "./supabase"
 
 export type AppRole = "admin" | "executive"
 export type IdType = "national_id" | "passport"
+export type AppLanguage = "en" | "es"
 
 /** A row from public.profiles, with the role name resolved from roles. */
 export type Profile = {
@@ -13,6 +14,7 @@ export type Profile = {
   id_number: string | null
   id_type: IdType | null
   role_id: string | null
+  preferred_language: AppLanguage | null
   role: AppRole | null
 }
 
@@ -22,7 +24,7 @@ type ProfileRow = Omit<Profile, "role"> & {
 }
 
 const PROFILE_COLUMNS =
-  "id, auth_id, email, display_name, phone_number, id_number, id_type, role_id, roles(name)"
+  "id, auth_id, email, display_name, phone_number, id_number, id_type, role_id, preferred_language, roles(name)"
 
 export const authService = {
   // Sign a user in with email + password; returns the session/user data.
@@ -38,6 +40,13 @@ export const authService = {
   // Sign the current user out.
   signOut: async () => {
     const { error } = await supabase.auth.signOut()
+    if (error) throw error
+  },
+
+  // Persist the current user's UI language. Goes through a SECURITY DEFINER RPC
+  // so non-admins can update this one column despite the admin-only write policy.
+  setPreferredLanguage: async (lang: AppLanguage): Promise<void> => {
+    const { error } = await supabase.rpc("set_my_preferred_language", { lang })
     if (error) throw error
   },
 

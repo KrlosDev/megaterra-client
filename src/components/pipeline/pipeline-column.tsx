@@ -1,6 +1,6 @@
 import { useDroppable } from "@dnd-kit/core"
+import { useTranslation } from "react-i18next"
 import type { Lead, LeadStage } from "@/services"
-import { LEAD_STAGE_LABELS } from "@/lib/lead-format"
 import { cn } from "@/lib/utils"
 import { PipelineCard } from "./pipeline-card"
 
@@ -11,6 +11,7 @@ type PipelineColumnProps = {
 
 /** A droppable stage column holding the leads currently in that stage. */
 export function PipelineColumn({ stage, leads }: PipelineColumnProps) {
+  const { t } = useTranslation()
   const { setNodeRef, isOver } = useDroppable({ id: stage })
 
   return (
@@ -23,7 +24,7 @@ export function PipelineColumn({ stage, leads }: PipelineColumnProps) {
     >
       <div className="flex items-center justify-between gap-2 px-3 py-2.5">
         <span className="font-heading text-xs font-medium">
-          {LEAD_STAGE_LABELS[stage]}
+          {t(`leads.stages.${stage}`)}
         </span>
         <span className="rounded-full bg-muted px-1.5 py-0.5 text-[0.7rem] font-medium text-muted-foreground">
           {leads.length}
@@ -33,7 +34,7 @@ export function PipelineColumn({ stage, leads }: PipelineColumnProps) {
       <div className="scroll-fade flex min-h-24 flex-1 flex-col gap-2 overflow-y-auto px-2 py-2">
         {leads.length === 0 ? (
           <div className="flex min-h-24 flex-1 items-center justify-center rounded-md border border-dashed border-foreground/10 p-4 text-center text-[0.7rem] text-muted-foreground">
-            Drop leads here
+            {t("pipeline.dropHere")}
           </div>
         ) : (
           leads.map((lead) => <PipelineCard key={lead.id} lead={lead} />)

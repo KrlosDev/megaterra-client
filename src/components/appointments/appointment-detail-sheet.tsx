@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { format } from "date-fns"
 import { CalendarClockIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import {
   appointmentsService,
@@ -9,11 +10,10 @@ import {
 } from "@/services"
 import {
   APPOINTMENT_STATUS_DOT_COLORS,
-  APPOINTMENT_STATUS_LABELS,
   APPOINTMENT_STATUS_OPTIONS,
   APPOINTMENT_TYPE_ICONS,
-  APPOINTMENT_TYPE_LABELS,
 } from "@/lib/appointment-format"
+import { dateLocale } from "@/lib/locale"
 import { AppointmentStatusBadge } from "@/components/appointments/appointment-status-badge"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -86,6 +86,7 @@ function DetailContent({
   appointment: Appointment
   onUpdated: (appointment: Appointment) => void
 }) {
+  const { t } = useTranslation()
   const scheduled = new Date(appointment.scheduled_at)
   const [saving, setSaving] = useState(false)
   const [rescheduling, setRescheduling] = useState(false)
@@ -99,11 +100,11 @@ function DetailContent({
     setSaving(true)
     try {
       const updated = await appointmentsService.update(appointment.id, { status })
-      toast.success("Status updated")
+      toast.success(t("appointments.statusUpdated"))
       onUpdated(updated)
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to update status"
+        error instanceof Error ? error.message : t("appointments.updateStatusFailed")
       )
     } finally {
       setSaving(false)
@@ -112,7 +113,7 @@ function DetailContent({
 
   async function handleReschedule() {
     if (!date || !time) {
-      toast.error("Pick a new date and time")
+      toast.error(t("appointments.pickDateTime"))
       return
     }
     setSaving(true)
@@ -123,12 +124,12 @@ function DetailContent({
         original_scheduled_at:
           appointment.original_scheduled_at ?? appointment.scheduled_at,
       })
-      toast.success("Appointment rescheduled")
+      toast.success(t("appointments.rescheduled"))
       onUpdated(updated)
       setRescheduling(false)
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to reschedule"
+        error instanceof Error ? error.message : t("appointments.rescheduleFailed")
       )
     } finally {
       setSaving(false)
@@ -138,7 +139,9 @@ function DetailContent({
   return (
     <>
       <SheetHeader>
-        <SheetTitle>{appointment.lead?.lead_name ?? "Appointment"}</SheetTitle>
+        <SheetTitle>
+          {appointment.lead?.lead_name ?? t("appointments.fallbackTitle")}
+        </SheetTitle>
         <SheetDescription>
           {appointment.project?.project_name ?? "—"}
         </SheetDescription>
@@ -147,24 +150,24 @@ function DetailContent({
       <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 pb-6">
         <div className="flex flex-col gap-3 rounded-lg border bg-card p-4">
           <DetailRow
-            label="Status"
+            label={t("common.status")}
             value={<AppointmentStatusBadge status={appointment.status} />}
           />
           <DetailRow
-            label="Type"
+            label={t("appointments.type")}
             value={
               <span className="inline-flex items-center gap-1.5">
                 <TypeIcon className="size-4" />
-                {APPOINTMENT_TYPE_LABELS[appointment.appointment_type]}
+                {t(`appointments.types.${appointment.appointment_type}`)}
               </span>
             }
           />
           <DetailRow
-            label="Lead phone"
+            label={t("appointments.leadPhone")}
             value={appointment.lead?.lead_phone ?? "—"}
           />
           <DetailRow
-            label="Advisor"
+            label={t("appointments.advisor")}
             value={
               appointment.advisor?.display_name ||
               appointment.advisor?.email ||
@@ -172,25 +175,30 @@ function DetailContent({
             }
           />
           <DetailRow
-            label="Scheduled"
-            value={format(scheduled, "EEE, MMM d, yyyy · HH:mm")}
+            label={t("appointments.scheduled")}
+            value={format(scheduled, "EEE, MMM d, yyyy · HH:mm", {
+              locale: dateLocale(),
+            })}
           />
           {appointment.original_scheduled_at && (
             <DetailRow
-              label="Originally"
+              label={t("appointments.originally")}
               value={format(
                 new Date(appointment.original_scheduled_at),
-                "MMM d, yyyy · HH:mm"
+                "MMM d, yyyy · HH:mm",
+                { locale: dateLocale() }
               )}
             />
           )}
           {appointment.notes && (
-            <DetailRow label="Notes" value={appointment.notes} />
+            <DetailRow label={t("appointments.notes")} value={appointment.notes} />
           )}
         </div>
 
         <Field>
-          <FieldLabel htmlFor="detail_status">Change status</FieldLabel>
+          <FieldLabel htmlFor="detail_status">
+            {t("appointments.changeStatus")}
+          </FieldLabel>
           <Select
             value={appointment.status}
             onValueChange={(value) => handleStatusChange(value as AppointmentStatus)}
@@ -208,7 +216,7 @@ function DetailContent({
                       APPOINTMENT_STATUS_DOT_COLORS[status]
                     )}
                   />
-                  {APPOINTMENT_STATUS_LABELS[status]}
+                  {t(`appointments.statuses.${status}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -218,11 +226,15 @@ function DetailContent({
         {rescheduling ? (
           <div className="flex flex-col gap-4 rounded-lg border p-4">
             <Field>
-              <FieldLabel htmlFor="reschedule_date">New date</FieldLabel>
+              <FieldLabel htmlFor="reschedule_date">
+                {t("appointments.newDate")}
+              </FieldLabel>
               <DatePicker id="reschedule_date" value={date} onChange={setDate} />
             </Field>
             <Field>
-              <FieldLabel htmlFor="reschedule_time">New hour</FieldLabel>
+              <FieldLabel htmlFor="reschedule_time">
+                {t("appointments.newHour")}
+              </FieldLabel>
               <TimePicker
                 id="reschedule_time"
                 value={time}
@@ -231,14 +243,14 @@ function DetailContent({
             </Field>
             <div className="flex gap-2">
               <Button onClick={handleReschedule} disabled={saving}>
-                {saving ? "Saving..." : "Save new time"}
+                {saving ? t("common.saving") : t("appointments.saveNewTime")}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setRescheduling(false)}
                 disabled={saving}
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
             </div>
           </div>
@@ -249,7 +261,7 @@ function DetailContent({
             disabled={saving}
           >
             <CalendarClockIcon />
-            Reschedule
+            {t("appointments.reschedule")}
           </Button>
         )}
       </div>

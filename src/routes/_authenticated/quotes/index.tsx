@@ -2,9 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { createFileRoute } from "@tanstack/react-router"
 import { format } from "date-fns"
 import { DownloadIcon, PlusIcon, SendIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
+import type { TFunction } from "i18next"
 import { toast } from "sonner"
 import { quotesService, type Quote } from "@/services"
 import { formatPrice } from "@/lib/inventory-format"
+import { dateLocale } from "@/lib/locale"
 import { downloadQuotePdf, quoteToPdfData } from "@/lib/quote-pdf"
 import {
   useQuotesStore,
@@ -24,14 +27,12 @@ export const Route = createFileRoute("/_authenticated/quotes/")({
   component: RouteComponent,
 })
 
-const FILTERS: { value: QuoteStatusFilter; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "sent", label: "Sent" },
-  { value: "unsent", label: "Not sent" },
-]
+const FILTER_VALUES: QuoteStatusFilter[] = ["all", "sent", "unsent"]
 
 function fmtDate(value: string | null): string {
-  return value ? format(new Date(value), "MMM d, yyyy") : "—"
+  return value
+    ? format(new Date(value), "MMM d, yyyy", { locale: dateLocale() })
+    : "—"
 }
 
 function fmtPct(value: number | null): string {
@@ -41,6 +42,7 @@ function fmtPct(value: number | null): string {
 // Columns for the quotes DataTable. Built as a factory so the row actions can
 // close over the page's toggle / re-download / resend callbacks.
 function createQuotesColumns(
+  t: TFunction,
   onToggleSent: (quote: Quote, next: boolean) => void,
   onRedownload: (quote: Quote) => void,
   onResend: (quote: Quote) => void
@@ -48,7 +50,7 @@ function createQuotesColumns(
   return [
     {
       id: "client",
-      header: "Client",
+      header: t("quotes.client"),
       accessor: (quote) => quote.client_name ?? quote.lead?.lead_name ?? null,
       cell: (quote) => (
         <span className="font-medium">
@@ -58,20 +60,20 @@ function createQuotesColumns(
     },
     {
       id: "lead",
-      header: "Lead",
+      header: t("quotes.lead"),
       accessor: (quote) => quote.lead?.lead_name ?? null,
       cell: (quote) => quote.lead?.lead_name ?? "—",
     },
     {
       id: "phone",
-      header: "Phone",
+      header: t("leads.phone"),
       accessor: (quote) => quote.lead?.lead_phone ?? null,
       cell: (quote) => quote.lead?.lead_phone ?? "—",
       enableFilter: false,
     },
     {
       id: "advisor",
-      header: "Advisor",
+      header: t("leads.advisor"),
       accessor: (quote) =>
         quote.advisor?.display_name || quote.advisor?.email || null,
       cell: (quote) =>
@@ -79,25 +81,25 @@ function createQuotesColumns(
     },
     {
       id: "project",
-      header: "Project",
+      header: t("leads.project"),
       accessor: (quote) => quote.project?.project_name ?? null,
       cell: (quote) => quote.project?.project_name ?? "—",
     },
     {
       id: "unit",
-      header: "Unit",
+      header: t("quotes.unit"),
       accessor: (quote) => quote.unit?.unit ?? null,
       cell: (quote) => quote.unit?.unit ?? "—",
     },
     {
       id: "currency",
-      header: "Currency",
+      header: t("quotes.currency"),
       accessor: (quote) => quote.currency,
       cell: (quote) => quote.currency ?? "—",
     },
     {
       id: "price",
-      header: "Price",
+      header: t("quotes.price"),
       align: "right",
       accessor: (quote) => quote.price,
       cell: (quote) => formatPrice(quote.price, quote.currency),
@@ -105,7 +107,7 @@ function createQuotesColumns(
     },
     {
       id: "down_pct",
-      header: "Down %",
+      header: t("quotes.downPct"),
       align: "right",
       size: 120,
       accessor: (quote) => quote.down_pct,
@@ -114,7 +116,7 @@ function createQuotesColumns(
     },
     {
       id: "down_amount",
-      header: "Down payment",
+      header: t("quotes.downPayment"),
       align: "right",
       accessor: (quote) => quote.down_amount,
       cell: (quote) => formatPrice(quote.down_amount, quote.currency),
@@ -122,24 +124,27 @@ function createQuotesColumns(
     },
     {
       id: "financed",
-      header: "Financed",
+      header: t("quotes.financed"),
       accessor: (quote) => quote.financed,
       cell: (quote) => formatPrice(quote.financed, quote.currency),
       enableFilter: false,
     },
     {
       id: "term",
-      header: "Term",
+      header: t("quotes.term"),
       accessor: (quote) => quote.term_months,
       cell: (quote) =>
         quote.term_years == null
           ? "—"
-          : `${quote.term_years} yr (${quote.term_months ?? "—"} mo)`,
+          : t("quotes.termValue", {
+              years: quote.term_years,
+              months: quote.term_months ?? "—",
+            }),
       enableFilter: false,
     },
     {
       id: "rate",
-      header: "Rate",
+      header: t("quotes.rate"),
       align: "right",
       size: 80,
       accessor: (quote) => quote.interest_rate,
@@ -148,55 +153,55 @@ function createQuotesColumns(
     },
     {
       id: "monthly",
-      header: "Monthly",
+      header: t("quotes.monthly"),
       accessor: (quote) => quote.monthly_payment,
       cell: (quote) => formatPrice(quote.monthly_payment, quote.currency),
       enableFilter: false,
     },
     {
       id: "total",
-      header: "Total",
+      header: t("quotes.total"),
       accessor: (quote) => quote.total,
       cell: (quote) => formatPrice(quote.total, quote.currency),
       enableFilter: false,
     },
     {
       id: "status",
-      header: "Status",
+      header: t("common.status"),
       accessor: (quote) => quote.sent,
       enableFilter: true,
       enableResizing: false,
-      filterLabel: (value) => (value ? "Sent" : "Not sent"),
+      filterLabel: (value) => (value ? t("quotes.sent") : t("quotes.notSent")),
       cell: (quote) => (
         <div className="flex items-center gap-2">
           <Switch
             checked={quote.sent}
             onCheckedChange={(next) => onToggleSent(quote, next)}
-            aria-label={quote.sent ? "Mark as not sent" : "Mark as sent"}
+            aria-label={quote.sent ? t("quotes.notSent") : t("quotes.sent")}
           />
           <Badge variant={quote.sent ? "default" : "outline"}>
-            {quote.sent ? "Sent" : "Not sent"}
+            {quote.sent ? t("quotes.sent") : t("quotes.notSent")}
           </Badge>
         </div>
       ),
     },
     {
       id: "sent_at",
-      header: "Sent on",
+      header: t("quotes.sentOn"),
       accessor: (quote) => quote.sent_at,
       cell: (quote) => fmtDate(quote.sent_at),
       enableFilter: false,
     },
     {
       id: "created",
-      header: "Created",
+      header: t("quotes.createdCol"),
       accessor: (quote) => quote.created_at,
       cell: (quote) => fmtDate(quote.created_at),
       enableFilter: false,
     },
     {
       id: "actions",
-      header: "Actions",
+      header: t("common.actions"),
       align: "right",
       enableSorting: false,
       enableFilter: false,
@@ -208,17 +213,17 @@ function createQuotesColumns(
             size="sm"
             variant="outline"
             onClick={() => onRedownload(quote)}
-            aria-label="Download PDF"
+            aria-label={t("common.download")}
           >
             <DownloadIcon />
           </Button>
           <Button
             size="sm"
             onClick={() => onResend(quote)}
-            aria-label="Resend via WhatsApp"
+            aria-label={t("quotes.resend")}
           >
             <SendIcon />
-            Resend
+            {t("quotes.resend")}
           </Button>
         </div>
       ),
@@ -227,6 +232,7 @@ function createQuotesColumns(
 }
 
 function RouteComponent() {
+  const { t } = useTranslation()
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [loading, setLoading] = useState(true)
   const [newQuoteOpen, setNewQuoteOpen] = useState(false)
@@ -241,7 +247,7 @@ function RouteComponent() {
       .then(setQuotes)
       .catch((error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to load quotes"
+          error instanceof Error ? error.message : t("quotes.loadFailed")
         )
       })
   }
@@ -255,7 +261,7 @@ function RouteComponent() {
       })
       .catch((error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to load quotes"
+          error instanceof Error ? error.message : t("quotes.loadFailed")
         )
       })
       .finally(() => {
@@ -301,31 +307,32 @@ function RouteComponent() {
             )
           )
           toast.error(
-            error instanceof Error ? error.message : "Failed to update quote"
+            error instanceof Error ? error.message : t("quotes.updateFailed")
           )
         })
     },
-    []
+    [t]
   )
 
   // WhatsApp sending isn't wired up yet: for now "resend" (re-)marks the quote
   // sent and re-stamps "Sent on" to now, even if it was already sent.
   const handleResend = useCallback(
     (quote: Quote) => {
-      toast("WhatsApp sending coming soon")
+      toast(t("quotes.whatsappComingSoon"))
       handleToggleSent(quote, true, true)
     },
-    [handleToggleSent]
+    [handleToggleSent, t]
   )
 
   const columns = useMemo(
     () =>
       createQuotesColumns(
+        t,
         handleToggleSent,
         (quote) => downloadQuotePdf(quoteToPdfData(quote)),
         handleResend
       ),
-    [handleToggleSent, handleResend]
+    [t, handleToggleSent, handleResend]
   )
 
   const counts = useMemo(() => {
@@ -343,9 +350,9 @@ function RouteComponent() {
   }, [quotes, filter])
 
   const stats = [
-    { label: "Total Quotes", value: counts.total },
-    { label: "Sent", value: counts.sent },
-    { label: "Not sent", value: counts.unsent },
+    { key: "all", label: t("quotes.totalQuotes"), value: counts.total },
+    { key: "sent", label: t("quotes.sent"), value: counts.sent },
+    { key: "unsent", label: t("quotes.notSent"), value: counts.unsent },
   ]
 
   return (
@@ -353,14 +360,14 @@ function RouteComponent() {
       <HeaderSlot>
         <Button size="sm" onClick={() => setNewQuoteOpen(true)}>
           <PlusIcon />
-          New quote
+          {t("quotes.newQuote")}
         </Button>
       </HeaderSlot>
 
       {/* Summary stat cards */}
       <div className="grid grid-cols-3 gap-4">
         {stats.map((stat) => (
-          <Card key={stat.label} size="sm" className="py-2">
+          <Card key={stat.key} size="sm" className="py-2">
             <CardContent className="flex items-baseline justify-between gap-2">
               <span className="text-[0.7rem] font-medium tracking-wide text-muted-foreground uppercase">
                 {stat.label}
@@ -375,14 +382,18 @@ function RouteComponent() {
 
       {/* Sent-status filter pills */}
       <div className="flex flex-wrap items-center gap-2">
-        {FILTERS.map((filterOption) => (
+        {FILTER_VALUES.map((value) => (
           <Button
-            key={filterOption.value}
+            key={value}
             size="sm"
-            variant={filter === filterOption.value ? "default" : "outline"}
-            onClick={() => setFilter(filterOption.value)}
+            variant={filter === value ? "default" : "outline"}
+            onClick={() => setFilter(value)}
           >
-            {filterOption.label}
+            {value === "all"
+              ? t("common.all")
+              : value === "sent"
+                ? t("quotes.sent")
+                : t("quotes.notSent")}
           </Button>
         ))}
       </div>
@@ -395,7 +406,7 @@ function RouteComponent() {
         resizable
         columnsPanel
         minRows={13}
-        emptyMessage="No quotes yet."
+        emptyMessage={t("quotes.empty")}
         sorting={store.sorting}
         onSortingChange={store.setSorting}
         columnFilters={store.columnFilters}

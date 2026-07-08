@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import { authService, type Profile } from "@/services"
+import i18n from "@/i18n"
 
 type AuthStore = {
   /** The signed-in user's profile, or null when unknown / signed out. */
@@ -24,6 +25,11 @@ export const useAuthStore = create<AuthStore>((set) => ({
   loadProfile: async () => {
     set({ isLoading: true })
     const profile = await authService.getCurrentProfile()
+    // The user's saved language is the source of truth; apply it over whatever
+    // the detector guessed from localStorage/browser on first paint.
+    if (profile?.preferred_language) {
+      void i18n.changeLanguage(profile.preferred_language)
+    }
     set({ profile, isLoading: false })
   },
   clear: () => set({ profile: null, isLoading: false }),

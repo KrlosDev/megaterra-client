@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { createFileRoute } from "@tanstack/react-router"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import { leadsService, type Lead } from "@/services"
 import { LEAD_STAGE_ORDER } from "@/lib/lead-format"
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/_authenticated/pipeline/")({
 })
 
 function RouteComponent() {
+  const { t } = useTranslation()
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -23,7 +25,7 @@ function RouteComponent() {
       })
       .catch((error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to load leads"
+          error instanceof Error ? error.message : t("leads.loadFailed")
         )
       })
       .finally(() => {

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { PlusIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import {
   appointmentsService,
@@ -12,10 +13,7 @@ import {
   type Project,
 } from "@/services"
 import { useAuthStore } from "@/stores/auth-store"
-import {
-  APPOINTMENT_TYPE_LABELS,
-  APPOINTMENT_TYPE_OPTIONS,
-} from "@/lib/appointment-format"
+import { APPOINTMENT_TYPE_OPTIONS } from "@/lib/appointment-format"
 import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
 import { Field, FieldLabel } from "@/components/ui/field"
@@ -59,6 +57,7 @@ export function CreateAppointmentSheet({
 }: {
   onCreated: (appointment: Appointment) => void
 }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState(EMPTY)
   const [date, setDate] = useState<Date | undefined>(undefined)
@@ -76,10 +75,10 @@ export function CreateAppointmentSheet({
       })
       .catch((error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to load form data"
+          error instanceof Error ? error.message : t("appointments.loadFormFailed")
         )
       })
-  }, [open, projects.length])
+  }, [open, projects.length, t])
 
   function set<K extends keyof typeof EMPTY>(key: K, value: (typeof EMPTY)[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -98,7 +97,7 @@ export function CreateAppointmentSheet({
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!form.project_id || !form.lead_id || !date || !form.time) {
-      toast.error("Project, lead, date and time are required")
+      toast.error(t("appointments.requiredFields"))
       return
     }
     setSaving(true)
@@ -112,14 +111,14 @@ export function CreateAppointmentSheet({
     }
     try {
       const appointment = await appointmentsService.create(payload)
-      toast.success("Appointment created")
+      toast.success(t("appointments.appointmentCreated"))
       onCreated(appointment)
       setForm(EMPTY)
       setDate(undefined)
       setOpen(false)
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to create appointment"
+        error instanceof Error ? error.message : t("appointments.createFailed")
       )
     } finally {
       setSaving(false)
@@ -131,14 +130,14 @@ export function CreateAppointmentSheet({
       <SheetTrigger asChild>
         <Button size="sm">
           <PlusIcon />
-          New appointment
+          {t("appointments.newAppointment")}
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-full sm:max-w-xl">
         <SheetHeader>
-          <SheetTitle>New appointment</SheetTitle>
+          <SheetTitle>{t("appointments.newAppointment")}</SheetTitle>
           <SheetDescription>
-            Schedule a lead visit or meeting for a project.
+            {t("appointments.newAppointmentDescription")}
           </SheetDescription>
         </SheetHeader>
 
@@ -147,13 +146,13 @@ export function CreateAppointmentSheet({
           className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 pb-6"
         >
           <Field>
-            <FieldLabel htmlFor="appt_project">Project *</FieldLabel>
+            <FieldLabel htmlFor="appt_project">{t("appointments.project")} *</FieldLabel>
             <Select
               value={form.project_id || undefined}
               onValueChange={handleProjectChange}
             >
               <SelectTrigger id="appt_project" className="w-full">
-                <SelectValue placeholder="Select project" />
+                <SelectValue placeholder={t("leads.selectProject")} />
               </SelectTrigger>
               <SelectContent position="popper" className="max-h-60">
                 {projects.map((project) => (
@@ -166,7 +165,7 @@ export function CreateAppointmentSheet({
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="appt_lead">Lead *</FieldLabel>
+            <FieldLabel htmlFor="appt_lead">{t("appointments.lead")} *</FieldLabel>
             <Select
               value={form.lead_id || undefined}
               onValueChange={(value) => set("lead_id", value)}
@@ -175,7 +174,9 @@ export function CreateAppointmentSheet({
               <SelectTrigger id="appt_lead" className="w-full">
                 <SelectValue
                   placeholder={
-                    form.project_id ? "Select lead" : "Select a project first"
+                    form.project_id
+                      ? t("appointments.selectLead")
+                      : t("appointments.selectProjectFirst")
                   }
                 />
               </SelectTrigger>
@@ -191,18 +192,18 @@ export function CreateAppointmentSheet({
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="appt_type">Type *</FieldLabel>
+            <FieldLabel htmlFor="appt_type">{t("appointments.type")} *</FieldLabel>
             <Select
               value={form.appointment_type}
               onValueChange={(value) => set("appointment_type", value as AppointmentType)}
             >
               <SelectTrigger id="appt_type" className="w-full">
-                <SelectValue placeholder="Select type" />
+                <SelectValue placeholder={t("appointments.selectType")} />
               </SelectTrigger>
               <SelectContent>
                 {APPOINTMENT_TYPE_OPTIONS.map((type) => (
                   <SelectItem key={type} value={type}>
-                    {APPOINTMENT_TYPE_LABELS[type]}
+                    {t(`appointments.types.${type}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -210,12 +211,12 @@ export function CreateAppointmentSheet({
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="appt_date">Date *</FieldLabel>
+            <FieldLabel htmlFor="appt_date">{t("appointments.date")} *</FieldLabel>
             <DatePicker id="appt_date" value={date} onChange={setDate} />
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="appt_time">Hour *</FieldLabel>
+            <FieldLabel htmlFor="appt_time">{t("appointments.hour")} *</FieldLabel>
             <TimePicker
               id="appt_time"
               value={form.time}
@@ -224,18 +225,18 @@ export function CreateAppointmentSheet({
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="appt_notes">Notes</FieldLabel>
+            <FieldLabel htmlFor="appt_notes">{t("appointments.notes")}</FieldLabel>
             <Textarea
               id="appt_notes"
               value={form.notes}
               onChange={(event) => set("notes", event.target.value)}
-              placeholder="Anything to remember about this appointment"
+              placeholder={t("appointments.phNotes")}
             />
           </Field>
 
           <SheetFooter className="mt-auto px-0">
             <Button type="submit" disabled={saving}>
-              {saving ? "Creating..." : "Create appointment"}
+              {saving ? t("common.creating") : t("appointments.createAppointment")}
             </Button>
           </SheetFooter>
         </form>

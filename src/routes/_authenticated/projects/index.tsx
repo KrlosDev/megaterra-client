@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { createFileRoute } from "@tanstack/react-router"
 import { Building2Icon, PlusIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import {
   appointmentsService,
@@ -65,6 +66,7 @@ function computeStats(
 }
 
 function RouteComponent() {
+  const { t } = useTranslation()
   const [projects, setProjects] = useState<Project[]>([])
   const [units, setUnits] = useState<InventoryUnit[]>([])
   const [leads, setLeads] = useState<Lead[]>([])
@@ -89,7 +91,7 @@ function RouteComponent() {
       })
       .catch((error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to load projects"
+          error instanceof Error ? error.message : t("projects.loadFailed")
         )
       })
       .finally(() => {
@@ -117,7 +119,7 @@ function RouteComponent() {
             trigger={
               <Button size="sm">
                 <PlusIcon />
-                New project
+                {t("projects.newProject")}
               </Button>
             }
           />
@@ -136,7 +138,7 @@ function RouteComponent() {
             <EmptyMedia variant="icon">
               <Building2Icon />
             </EmptyMedia>
-            <EmptyTitle>No projects yet.</EmptyTitle>
+            <EmptyTitle>{t("projects.empty")}</EmptyTitle>
           </EmptyHeader>
         </Empty>
       ) : (

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { CalculatorIcon, DownloadIcon, SendIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import {
   inventoryService,
@@ -58,6 +59,7 @@ export function QuoterSheet({
     onOpenChange?.(value)
   }
 
+  const { t } = useTranslation()
   const profile = useAuthStore((state) => state.profile)
 
   const [projects, setProjects] = useState<Project[]>([])
@@ -88,7 +90,7 @@ export function QuoterSheet({
       })
       .catch((error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to load quoter data"
+          error instanceof Error ? error.message : t("quoter.loadFailed")
         )
       })
   }, [open, projects.length])
@@ -142,7 +144,7 @@ export function QuoterSheet({
 
   async function handleDownload() {
     if (!selectedUnit) {
-      toast.error("Select a unit first")
+      toast.error(t("quoter.selectUnitFirst"))
       return
     }
     downloadQuotePdf({
@@ -184,7 +186,7 @@ export function QuoterSheet({
       })
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to record quote"
+        error instanceof Error ? error.message : t("quoter.recordFailed")
       )
     } finally {
       setSaving(false)
@@ -195,9 +197,9 @@ export function QuoterSheet({
     <Sheet open={open} onOpenChange={setOpen}>
       {!controlled && (
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label="Open quoter">
+          <Button variant="ghost" size="icon" aria-label={t("quoter.open")}>
             <CalculatorIcon className="size-4" />
-            <span className="sr-only">Quoter</span>
+            <span className="sr-only">{t("quoter.title")}</span>
           </Button>
         </SheetTrigger>
       )}
@@ -206,18 +208,16 @@ export function QuoterSheet({
         className="data-[side=right]:w-full data-[side=right]:sm:max-w-lg"
       >
         <SheetHeader>
-          <SheetTitle>Quoter</SheetTitle>
-          <SheetDescription>
-            Estimate a financing plan for a unit.
-          </SheetDescription>
+          <SheetTitle>{t("quoter.title")}</SheetTitle>
+          <SheetDescription>{t("quoter.description")}</SheetDescription>
         </SheetHeader>
 
         <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 pb-6">
           <Field>
-            <FieldLabel htmlFor="quote_lead">Lead</FieldLabel>
+            <FieldLabel htmlFor="quote_lead">{t("quoter.lead")}</FieldLabel>
             <Select value={leadId || undefined} onValueChange={handleLeadChange}>
               <SelectTrigger id="quote_lead" className="w-full">
-                <SelectValue placeholder="No lead (one-off quote)" />
+                <SelectValue placeholder={t("quoter.noLead")} />
               </SelectTrigger>
               <SelectContent position="popper" className="max-h-60">
                 {leads.map((lead) => (
@@ -230,20 +230,20 @@ export function QuoterSheet({
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="quote_client">Client</FieldLabel>
+            <FieldLabel htmlFor="quote_client">{t("quoter.client")}</FieldLabel>
             <Input
               id="quote_client"
               value={client}
               onChange={(event) => setClient(event.target.value)}
-              placeholder="Client name"
+              placeholder={t("quoter.clientName")}
             />
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="quote_project">Project</FieldLabel>
+            <FieldLabel htmlFor="quote_project">{t("quoter.project")}</FieldLabel>
             <Select value={projectId || undefined} onValueChange={handleProjectChange}>
               <SelectTrigger id="quote_project" className="w-full">
-                <SelectValue placeholder="Select project" />
+                <SelectValue placeholder={t("quoter.selectProject")} />
               </SelectTrigger>
               <SelectContent position="popper" className="max-h-60">
                 {projects.map((project) => (
@@ -256,7 +256,7 @@ export function QuoterSheet({
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="quote_unit">Unit</FieldLabel>
+            <FieldLabel htmlFor="quote_unit">{t("quoter.unit")}</FieldLabel>
             <Select
               value={unitId || undefined}
               onValueChange={setUnitId}
@@ -264,7 +264,11 @@ export function QuoterSheet({
             >
               <SelectTrigger id="quote_unit" className="w-full">
                 <SelectValue
-                  placeholder={projectId ? "Select unit" : "Select a project first"}
+                  placeholder={
+                    projectId
+                      ? t("quoter.selectUnit")
+                      : t("quoter.selectProjectFirst")
+                  }
                 />
               </SelectTrigger>
               <SelectContent position="popper" className="max-h-60">
@@ -279,7 +283,7 @@ export function QuoterSheet({
 
           <Field>
             <div className="flex items-center justify-between">
-              <FieldLabel htmlFor="quote_down">Down payment</FieldLabel>
+              <FieldLabel htmlFor="quote_down">{t("quoter.downPayment")}</FieldLabel>
               <span className="text-xs font-medium text-primary">
                 {downPct}% — {formatPrice(downAmount, currency)}
               </span>
@@ -300,7 +304,7 @@ export function QuoterSheet({
 
           <div className="grid grid-cols-2 gap-4">
             <Field>
-              <FieldLabel htmlFor="quote_years">Term (years)</FieldLabel>
+              <FieldLabel htmlFor="quote_years">{t("quoter.termYears")}</FieldLabel>
               <Input
                 id="quote_years"
                 type="number"
@@ -311,7 +315,7 @@ export function QuoterSheet({
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="quote_rate">Interest rate (% annual)</FieldLabel>
+              <FieldLabel htmlFor="quote_rate">{t("quoter.interestRate")}</FieldLabel>
               <Input
                 id="quote_rate"
                 type="number"
@@ -325,27 +329,33 @@ export function QuoterSheet({
 
           {/* Summary */}
           <div className="rounded-lg border bg-card p-4">
-            <h3 className="mb-3 text-sm font-medium">Summary</h3>
+            <h3 className="mb-3 text-sm font-medium">{t("quoter.summary")}</h3>
             <dl className="flex flex-col gap-2 text-xs">
-              <SummaryRow label="Unit price" value={formatPrice(price, currency)} />
               <SummaryRow
-                label="Down payment"
+                label={t("quoter.unitPrice")}
+                value={formatPrice(price, currency)}
+              />
+              <SummaryRow
+                label={t("quoter.downPayment")}
                 value={formatPrice(downAmount, currency)}
               />
               <SummaryRow
-                label="Amount to finance"
+                label={t("quoter.amountToFinance")}
                 value={formatPrice(financed, currency)}
               />
               <SummaryRow
-                label="Term"
-                value={`${years} years (${months} months)`}
+                label={t("quoter.term")}
+                value={t("quoter.termYearsMonths", { years, months })}
               />
-              <SummaryRow label="Rate" value={`${rate}% annual`} />
+              <SummaryRow
+                label={t("quoter.rate")}
+                value={t("quoter.rateAnnual", { rate })}
+              />
             </dl>
 
             <div className="mt-4 rounded-md bg-primary/10 p-3">
               <div className="text-xs text-muted-foreground">
-                Estimated monthly payment
+                {t("quoter.estMonthly")}
               </div>
               <div className="text-2xl font-bold text-primary">
                 {formatPrice(monthly, currency)}
@@ -353,7 +363,9 @@ export function QuoterSheet({
             </div>
 
             <div className="mt-3 flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Total to pay</span>
+              <span className="text-muted-foreground">
+                {t("quoter.totalToPay")}
+              </span>
               <span className="font-medium">{formatPrice(total, currency)}</span>
             </div>
           </div>
@@ -361,12 +373,12 @@ export function QuoterSheet({
           <div className="mt-2 flex flex-col gap-2">
             <Button onClick={handleDownload} disabled={!selectedUnit || saving}>
               <DownloadIcon />
-              {saving ? "Saving…" : "Download PDF"}
+              {saving ? t("common.saving") : t("quoter.downloadPdf")}
             </Button>
             {/* WhatsApp sending is a later step. */}
             <Button variant="outline" disabled>
               <SendIcon />
-              Send via WhatsApp
+              {t("quoter.sendWhatsapp")}
             </Button>
           </div>
         </div>

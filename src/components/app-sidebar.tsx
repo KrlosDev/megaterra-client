@@ -30,73 +30,75 @@ import {
   TerminalSquareIcon,
 } from "lucide-react"
 
+// `title` values are i18n keys (resolved with t() in NavMain); they also serve
+// as stable, non-localized keys for React lists and the open/closed sidebar state.
 const data = {
   navMain: [
     {
-      title: "Business",
+      title: "nav.business",
       url: "#",
       icon: <LayoutDashboardIcon />,
       isActive: true,
       items: [
         {
-          title: "Dashboard",
+          title: "nav.home",
           url: "/home",
         },
         {
-          title: "Leads",
+          title: "nav.leads",
           url: "/leads",
         },
         {
-          title: "Pipeline",
+          title: "nav.pipeline",
           url: "/pipeline",
         },
         {
-          title: "Appointments",
+          title: "nav.appointments",
           url: "/appointments",
         },
       ],
     },
     {
-      title: "Real Estate",
+      title: "nav.realEstate",
       url: "#",
       icon: <Building2Icon />,
       items: [
         {
-          title: "Projects",
+          title: "nav.projects",
           url: "/projects",
         },
         {
-          title: "Inventory",
+          title: "nav.inventory",
           url: "/inventory",
         },
         {
-          title: "Quotes",
+          title: "nav.quotes",
           url: "/quotes",
         },
       ],
     },
     {
-      title: "Closing",
+      title: "nav.closing",
       url: "#",
       icon: <FileUser />,
       items: [
         {
-          title: "Clients",
+          title: "nav.clients",
           url: "/clients",
         },
         {
-          title: "Formalities",
+          title: "nav.formalities",
           url: "/formalities",
         },
       ],
     },
     {
-      title: "System",
+      title: "nav.system",
       url: "#",
       icon: <TerminalSquareIcon />,
       items: [
         {
-          title: "Settings",
+          title: "nav.settings",
           url: "/settings",
         },
         // {

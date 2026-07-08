@@ -1,5 +1,6 @@
 import type { Table } from "@tanstack/react-table"
 import { Columns3Icon, RotateCcwIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import {
   Popover,
@@ -16,6 +17,7 @@ import { Button } from "@/components/ui/button"
  * column visibility / column widths back to their defaults.
  */
 export function DataTableSidePanel<TData>({ table }: { table: Table<TData> }) {
+  const { t } = useTranslation()
   const hideableColumns = table
     .getAllLeafColumns()
     .filter((column) => column.getCanHide())
@@ -36,18 +38,18 @@ export function DataTableSidePanel<TData>({ table }: { table: Table<TData> }) {
             className="h-auto justify-start gap-1.5 rounded-none px-1.5 py-3 text-xs font-normal text-muted-foreground [writing-mode:vertical-rl]"
           >
             <Columns3Icon className="rotate-90" />
-            Columns
+            {t("common.columns")}
           </Button>
         </PopoverTrigger>
         <PopoverContent align="end" side="left" className="w-52">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Columns</span>
+            <span className="text-sm font-medium">{t("common.columns")}</span>
             <Button
               variant="ghost"
               size="xs"
               onClick={() => table.toggleAllColumnsVisible(true)}
             >
-              Show all
+              {t("common.showAll")}
             </Button>
           </div>
           <div className="flex flex-col gap-1">
@@ -75,7 +77,7 @@ export function DataTableSidePanel<TData>({ table }: { table: Table<TData> }) {
         className="h-auto justify-start gap-1.5 rounded-none border-t px-1.5 py-3 text-xs font-normal text-muted-foreground [writing-mode:vertical-rl]"
       >
         <RotateCcwIcon className="rotate-90" />
-        Reset
+        {t("common.reset")}
       </Button>
     </div>
   )

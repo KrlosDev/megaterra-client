@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react"
 import {
+  addDays,
   addMonths,
   eachDayOfInterval,
   endOfMonth,
@@ -11,15 +12,12 @@ import {
   startOfWeek,
 } from "date-fns"
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import type { Appointment, AppointmentStatus } from "@/services"
-import {
-  APPOINTMENT_STATUS_DOT_COLORS,
-  APPOINTMENT_STATUS_LABELS,
-} from "@/lib/appointment-format"
+import { APPOINTMENT_STATUS_DOT_COLORS } from "@/lib/appointment-format"
+import { dateLocale } from "@/lib/locale"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
 /** Statuses to surface in the calendar legend (the common outcomes). */
 const LEGEND_STATUSES: AppointmentStatus[] = [
@@ -36,7 +34,17 @@ export function AppointmentCalendar({
   appointments: Appointment[]
   onSelect: (appointment: Appointment) => void
 }) {
+  const { t, i18n } = useTranslation()
   const [month, setMonth] = useState(() => startOfMonth(new Date()))
+
+  // Localized short weekday names (Sun–Sat), rebuilt on language change.
+  const weekdays = useMemo(() => {
+    const start = startOfWeek(new Date())
+    return Array.from({ length: 7 }, (_, index) =>
+      format(addDays(start, index), "EEE", { locale: dateLocale() })
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [i18n.language])
 
   // Group appointments by calendar day (yyyy-MM-dd) for quick cell lookup.
   const byDay = useMemo(() => {
@@ -66,18 +74,18 @@ export function AppointmentCalendar({
           <Button
             variant="ghost"
             size="icon"
-            aria-label="Previous month"
+            aria-label={t("appointments.previousMonth")}
             onClick={() => setMonth((current) => addMonths(current, -1))}
           >
             <ChevronLeftIcon />
           </Button>
           <h2 className="min-w-40 text-center text-lg font-semibold">
-            {format(month, "MMMM yyyy")}
+            {format(month, "MMMM yyyy", { locale: dateLocale() })}
           </h2>
           <Button
             variant="ghost"
             size="icon"
-            aria-label="Next month"
+            aria-label={t("appointments.nextMonth")}
             onClick={() => setMonth((current) => addMonths(current, 1))}
           >
             <ChevronRightIcon />
@@ -92,14 +100,14 @@ export function AppointmentCalendar({
                   APPOINTMENT_STATUS_DOT_COLORS[status]
                 )}
               />
-              {APPOINTMENT_STATUS_LABELS[status]}
+              {t(`appointments.statuses.${status}`)}
             </span>
           ))}
         </div>
       </div>
 
       <div className="grid grid-cols-7 border-t">
-        {WEEKDAYS.map((day) => (
+        {weekdays.map((day) => (
           <div
             key={day}
             className="border-b p-2 text-center text-xs font-medium text-muted-foreground"

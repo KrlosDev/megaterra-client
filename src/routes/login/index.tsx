@@ -1,8 +1,16 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { authService } from '@/services'
 import { LoginForm } from "@/components/login-form"
 import { logo, heroImage } from "@/assets"
 
 export const Route = createFileRoute('/login/')({
+  beforeLoad: async () => {
+    // Don't show the login page to an already-signed-in user; send them home.
+    const session = await authService.getSession()
+    if (session) {
+      throw redirect({ to: '/home' })
+    }
+  },
   component: RouteComponent,
 })
 

@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "megaterra-client",
+  "compatibility_date": "2026-07-08",
+  "assets": {
+    "directory": "dist",
+    // SPA fallback: serve index.html for any path that isn't a built asset,
+    // so client-side routes (e.g. /leads/:id) resolve on refresh / deep-link
+    // instead of returning 404.
+    "not_found_handling": "single-page-application"
+  }
+}
